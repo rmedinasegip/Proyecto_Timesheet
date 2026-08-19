@@ -1,0 +1,205 @@
+<p-toast></p-toast>
+<p-confirmDialog [style]="{width: '30rem'}"></p-confirmDialog>
+
+<div class="progress-page">
+  <div class="page-header">
+    <h2>Avance de proyectos</h2>
+  </div>
+
+  <div class="filters">
+    <div class="field">
+      <label><b>Proyecto</b></label>
+      <p-dropdown [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="seqproject"
+                  (onChange)="onProjectChange()" placeholder="Seleccione proyecto" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Fecha de corte</b></label>
+      <input type="date" [(ngModel)]="cutoffDate" (change)="onCutoffChange()" class="native-date" />
+    </div>
+    <div class="field">
+      <button pButton type="button" label="Descargar Excel" icon="pi pi-file-excel" [loading]="exporting"
+              [disabled]="!report" (click)="downloadExcel()"></button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="report">
+    <!-- Datos generales / Situación general -->
+    <div class="form-grid">
+      <div class="field"><label><b>Proyecto</b></label><div>{{ report.projectName }}</div></div>
+      <div class="field"><label><b>Cliente</b></label><div>{{ report.customerName }}</div></div>
+      <div class="field"><label><b>Estado</b></label><div>{{ report.statusName }}</div></div>
+      <div class="field"><label><b>Líder</b></label><div>{{ report.leaderName }}</div></div>
+      <div class="field"><label><b>Fecha inicio</b></label><div>{{ report.startDate }}</div></div>
+      <div class="field"><label><b>Fecha informe</b></label><div>{{ report.reportDate }}</div></div>
+      <div class="field"><label><b>Inicio planificado</b></label><div>{{ report.plannedStartDate }}</div></div>
+      <div class="field"><label><b>Fin planificado</b></label><div>{{ report.plannedEndDate }}</div></div>
+      <div class="field"><label><b>Inicio real</b></label><div>{{ report.realStartDate || '—' }}</div></div>
+      <div class="field"><label><b>Fin real</b></label><div>{{ report.realEndDate || '—' }}</div></div>
+    </div>
+
+    <!-- Días del proyecto por fase -->
+    <h3>Días del proyecto por fase</h3>
+    <div class="table-scroll">
+      <p-table [value]="report.phases" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Fase</th><th>Contratados</th><th>Adendum</th><th>Total</th>
+            <th>Avance esperado (d)</th><th>Avance real (d)</th><th>Por invertir</th>
+            <th>% Var. avance</th><th>Días T.S.</th><th>Saldo T.S.</th>
+            <th>% Var. asig. planif.</th><th>% Avance actual</th><th>% Avance real</th><th>% Efectividad</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr [class.total-row]="row.total">
+            <td>{{ row.description }}</td>
+            <td>{{ row.contractedDays ?? '—' }}</td>
+            <td>{{ row.addendumDays ?? '—' }}</td>
+            <td>{{ row.totalProjectDays ?? '—' }}</td>
+            <td>{{ row.expectedAdvanceDays ?? '—' }}</td>
+            <td>{{ row.realAdvanceDays ?? '—' }}</td>
+            <td>{{ row.daysToInvest ?? '—' }}</td>
+            <td>{{ row.advanceVariationPerc ?? '—' }}</td>
+            <td>{{ row.daysConsumedTs ?? '—' }}</td>
+            <td>{{ row.balanceDaysTs ?? '—' }}</td>
+            <td>{{ row.plannedAssignmentVariationPerc ?? '—' }}</td>
+            <td>{{ row.currentAdvancePerc ?? '—' }}</td>
+            <td>{{ row.realAdvancePerc ?? '—' }}</td>
+            <td>{{ row.effectivenessPerc ?? '—' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage"><tr><td colspan="14">Sin fases registradas en el Schedule del proyecto.</td></tr></ng-template>
+      </p-table>
+    </div>
+
+    <!-- Hitos -->
+    <h3>Hitos</h3>
+    <div class="table-scroll">
+      <p-table [value]="report.milestones" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Fase</th><th>Hito</th><th>Responsable</th><th>Días base</th><th>Adendum</th><th>Total</th>
+            <th>Inicio base</th><th>Fin base</th><th>% Avance real</th><th>% Efectividad</th><th>Días T.S.</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.parentDescription || '—' }}</td>
+            <td>{{ row.description }}</td>
+            <td>{{ row.memberName || '—' }}</td>
+            <td>{{ row.baseDays ?? '—' }}</td>
+            <td>{{ row.addendumDays ?? '—' }}</td>
+            <td>{{ row.totalDays ?? '—' }}</td>
+            <td>{{ row.baseStartDate || '—' }}</td>
+            <td>{{ row.baseEndDate || '—' }}</td>
+            <td>{{ row.realAdvancePerc ?? '—' }}</td>
+            <td>{{ row.effectivenessPerc ?? '—' }}</td>
+            <td>{{ row.daysConsumedTs ?? '—' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage"><tr><td colspan="11">Sin hitos registrados.</td></tr></ng-template>
+      </p-table>
+    </div>
+
+    <!-- Manejo de Riesgos -->
+    <h3>Manejo de riesgos</h3>
+    <div class="table-scroll">
+      <p-table [value]="report.risks" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr><th>Fecha</th><th>Tipo impacto</th><th>Descripción</th><th>Responsable</th><th>Compañía</th><th>Solución</th><th>Prob. %</th><th>Estado</th></tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.riskdate }}</td>
+            <td>{{ row.risktypeimpactName }}</td>
+            <td>{{ row.riskdescimpact }}</td>
+            <td>{{ row.personincharge }}</td>
+            <td>{{ row.company }}</td>
+            <td>{{ row.solution || '—' }}</td>
+            <td>{{ row.probabilityperc }}</td>
+            <td>{{ row.riskstatusName }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage"><tr><td colspan="8">Sin riesgos hasta la fecha de corte.</td></tr></ng-template>
+      </p-table>
+    </div>
+
+    <!-- Novedades Presentadas -->
+    <h3>Novedades presentadas</h3>
+    <div class="table-scroll">
+      <p-table [value]="report.news" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr><th>Fecha</th><th>Tipo impacto</th><th>Descripción</th><th>Reporta</th><th>Afectación</th><th>Responsable</th><th>Compañía</th><th>Solución</th><th>Estado</th></tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.datenewarrival }}</td>
+            <td>{{ row.newstypeimpactName }}</td>
+            <td>{{ row.descriptionnews }}</td>
+            <td>{{ row.personreporting }}</td>
+            <td>{{ row.affectation }}</td>
+            <td>{{ row.personincharge }}</td>
+            <td>{{ row.company }}</td>
+            <td>{{ row.solution || '—' }}</td>
+            <td>{{ row.newstatusName }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage"><tr><td colspan="9">Sin novedades hasta la fecha de corte.</td></tr></ng-template>
+      </p-table>
+    </div>
+
+    <!-- Cambios Aprobados -->
+    <h3>Cambios aprobados</h3>
+    <div class="inline-form wrap">
+      <input type="date" [(ngModel)]="newChange.changedate" [ngModelOptions]="{standalone: true}" class="native-date" placeholder="Fecha" />
+      <input pInputText [(ngModel)]="newChange.phase" [ngModelOptions]="{standalone: true}" placeholder="Fase" />
+      <input pInputText [(ngModel)]="newChange.deliverable" [ngModelOptions]="{standalone: true}" placeholder="Entregable" />
+      <input pInputText [(ngModel)]="newChange.reason" [ngModelOptions]="{standalone: true}" placeholder="Motivo" />
+      <input pInputText [(ngModel)]="newChange.approvedby" [ngModelOptions]="{standalone: true}" placeholder="Aprobador" />
+      <input pInputText [(ngModel)]="newChange.company" [ngModelOptions]="{standalone: true}" placeholder="Empresa" />
+      <p-inputNumber [(ngModel)]="newChange.daysvariation" [ngModelOptions]="{standalone: true}" placeholder="Variación días"></p-inputNumber>
+      <button pButton type="button" label="+ Nuevo cambio" icon="pi pi-plus" (click)="addChange()"></button>
+    </div>
+    <div class="table-scroll">
+      <p-table [value]="report.changes" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr><th>Fecha</th><th>Fase</th><th>Entregable</th><th>Motivo</th><th>Consecuencia</th><th>Aprobador</th><th>Empresa</th><th>Var. días</th><th>Fecha aplic.</th><th></th></tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr *ngIf="editingChangeSeq !== row.seqchange">
+            <td>{{ row.changedate }}</td>
+            <td>{{ row.phase }}</td>
+            <td>{{ row.deliverable }}</td>
+            <td>{{ row.reason }}</td>
+            <td>{{ row.consequence || '—' }}</td>
+            <td>{{ row.approvedby }}</td>
+            <td>{{ row.company }}</td>
+            <td>{{ row.daysvariation }}</td>
+            <td>{{ row.plannedapplydate || '—' }}</td>
+            <td>
+              <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="startEditChange(row)"></button>
+              <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteChange(row)"></button>
+            </td>
+          </tr>
+          <tr *ngIf="editingChangeSeq === row.seqchange">
+            <td><input type="date" [(ngModel)]="editingChangeForm.changedate" [ngModelOptions]="{standalone: true}" class="native-date" /></td>
+            <td><input pInputText [(ngModel)]="editingChangeForm.phase" [ngModelOptions]="{standalone: true}" /></td>
+            <td><input pInputText [(ngModel)]="editingChangeForm.deliverable" [ngModelOptions]="{standalone: true}" /></td>
+            <td><input pInputText [(ngModel)]="editingChangeForm.reason" [ngModelOptions]="{standalone: true}" /></td>
+            <td><input pInputText [(ngModel)]="editingChangeForm.consequence" [ngModelOptions]="{standalone: true}" /></td>
+            <td><input pInputText [(ngModel)]="editingChangeForm.approvedby" [ngModelOptions]="{standalone: true}" /></td>
+            <td><input pInputText [(ngModel)]="editingChangeForm.company" [ngModelOptions]="{standalone: true}" /></td>
+            <td><p-inputNumber [(ngModel)]="editingChangeForm.daysvariation" [ngModelOptions]="{standalone: true}"></p-inputNumber></td>
+            <td><input type="date" [(ngModel)]="editingChangeForm.plannedapplydate" [ngModelOptions]="{standalone: true}" class="native-date" /></td>
+            <td>
+              <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-sm" (click)="saveEditChange()"></button>
+              <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm" (click)="cancelEditChange()"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage"><tr><td colspan="10">Sin cambios aprobados hasta la fecha de corte.</td></tr></ng-template>
+      </p-table>
+    </div>
+  </ng-container>
+
+  <p class="hint" *ngIf="!report && !loading">Seleccione un proyecto para ver su reporte de avance.</p>
+</div>

@@ -1,0 +1,14 @@
+<header style="padding: 0.5rem 1rem; border-bottom: 1px solid #e0e0e0; font-family: sans-serif; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+  <h1 style="margin: 0; font-size: 1.15rem;">{{ title }}</h1>
+  <nav style="display: flex; gap: 1rem; flex-wrap: wrap;" *ngIf="currentUser">
+    <a routerLink="/projects" routerLinkActive="active-link">Proyectos</a>
+    <a routerLink="/progress" routerLinkActive="active-link">Avance</a>
+    <a routerLink="/timesheets" routerLinkActive="active-link">Timesheets</a>
+  </nav>
+  <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+    <span *ngIf="currentUser">{{ currentUser.name }} ({{ currentUser.roleName }})</span>
+    <button *ngIf="currentUser" pButton type="button" label="Cerrar sesión" class="p-button-text p-button-sm" (click)="logout()"></button>
+    <small>Backend: {{ backendStatus }}</small>
+  </div>
+</header>
+<router-outlet></router-outlet>

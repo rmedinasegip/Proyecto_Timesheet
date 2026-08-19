@@ -1,0 +1,11 @@
+package com.llacsaa.timesheet.schedule;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface ScheduleRepository extends JpaRepository<TprjProjectSchedule, Long> {
+    List<TprjProjectSchedule> findBySeqprojectOrderBySeqschedule(Long seqproject);
+
+    List<TprjProjectSchedule> findBySeqscheduleparent(Long seqscheduleparent);
+}

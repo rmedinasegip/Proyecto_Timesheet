@@ -1,0 +1,421 @@
+<p-confirmDialog [style]="{width: '30rem'}"></p-confirmDialog>
+
+<div class="project-form">
+  <div class="form-header" *ngIf="isEditMode && detail">
+    <span><b>Secuencia:</b> {{ detail.seq }}</span>
+    <span><b>Nombre:</b> {{ detail.projectName }}</span>
+    <span><b>Project manager:</b> {{ detail.pmName }}</span>
+    <span><b>Cliente:</b> {{ detail.customerName }}</span>
+  </div>
+
+  <p-tabView>
+    <!-- 1. Datos Generales -->
+    <p-tabPanel header="Datos generales">
+      <div class="form-grid">
+        <div class="field"><label><b>N.º contrato / propuesta</b></label>
+          <input pInputText [(ngModel)]="form.contractNumber" /></div>
+        <div class="field"><label><b>Código proyecto</b></label>
+          <input pInputText [(ngModel)]="form.projectCode" required /></div>
+        <div class="field"><label><b>Nombre del proyecto</b></label>
+          <input pInputText [(ngModel)]="form.projectName" required /></div>
+        <div class="field full"><label><b>Descripción extendida</b></label>
+          <textarea pInputTextarea [(ngModel)]="form.projectDescription" rows="3"></textarea></div>
+        <div class="field"><label><b>Cliente</b></label>
+          <p-dropdown [options]="customers" optionLabel="name" optionValue="code" [(ngModel)]="form.codecustomer"
+                      placeholder="Seleccione cliente" [filter]="true"></p-dropdown></div>
+        <div class="field"><label><b>Fecha de solicitud</b></label>
+          <p-calendar [(ngModel)]="form.requestDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+        <div class="field"><label><b>Código Project Manager</b></label>
+          <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="form.codeuserPm"
+                      placeholder="Seleccione PM" [filter]="true"></p-dropdown></div>
+      </div>
+    </p-tabPanel>
+
+    <!-- 2. Planificación -->
+    <p-tabPanel header="Planificación">
+      <div class="form-grid">
+        <div class="field"><label><b>Duración del proyecto (días)</b></label>
+          <p-inputNumber [(ngModel)]="form.projectDuration"></p-inputNumber></div>
+        <div class="field"><label><b>Fecha inicio base</b></label>
+          <p-calendar [(ngModel)]="form.baseStartDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+        <div class="field"><label><b>Fecha fin base</b></label>
+          <p-calendar [(ngModel)]="form.baseEndDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+        <div class="field"><label><b>Fecha inicio planificación</b></label>
+          <p-calendar [(ngModel)]="form.plannedStartDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+        <div class="field"><label><b>Fecha fin planificación</b></label>
+          <p-calendar [(ngModel)]="form.plannedEndDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+      </div>
+    </p-tabPanel>
+
+    <!-- 3. Ejecución Real -->
+    <p-tabPanel header="Ejecución real">
+      <div class="form-grid">
+        <div class="field"><label><b>Fecha inicio real</b></label>
+          <p-calendar [(ngModel)]="form.realStartDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+        <div class="field"><label><b>Fecha fin real</b></label>
+          <p-calendar [(ngModel)]="form.realEndDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+        <div class="field"><label><b>Estado</b></label>
+          <p-dropdown [options]="projectStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.status"
+                      [ngModelOptions]="{standalone: true}" placeholder="Seleccione estado"></p-dropdown>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button pButton type="button" [label]="isEditMode ? 'Guardar cambios' : 'Guardar Proyecto'"
+                icon="pi pi-save" [loading]="saving" (click)="saveHeader()"></button>
+      </div>
+    </p-tabPanel>
+
+    <!-- 4. Equipo de Trabajo -->
+    <p-tabPanel header="Equipo de trabajo" [disabled]="!currentSeq">
+      <p class="hint" *ngIf="!currentSeq">Guarde el proyecto primero para gestionar el equipo.</p>
+      <ng-container *ngIf="currentSeq">
+        <div class="inline-form">
+          <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="newTeamMember.memberuser"
+                      [ngModelOptions]="{standalone: true}" placeholder="Consultor" [filter]="true"></p-dropdown>
+          <p-dropdown [options]="projectRolItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newTeamMember.projectrol"
+                      [ngModelOptions]="{standalone: true}" placeholder="Rol"></p-dropdown>
+          <p-calendar [(ngModel)]="newTeamMember.assignmentdate" [ngModelOptions]="{standalone: true}"
+                      dateFormat="yy-mm-dd" dataType="string" placeholder="Fecha asignación" [showIcon]="true"></p-calendar>
+          <button pButton type="button" label="Agregar" icon="pi pi-plus" (click)="addTeamMember()"></button>
+        </div>
+        <p-table [value]="team" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr><th>Consultor</th><th>Rol</th><th>Fecha asignación</th><th></th></tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-member>
+            <tr>
+              <td>{{ member.memberName }}</td>
+              <td>{{ member.projectrol }}</td>
+              <td>{{ member.assignmentdate }}</td>
+              <td><button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+                          (click)="removeTeamMember(member)"></button></td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage"><tr><td colspan="4">Sin integrantes asignados.</td></tr></ng-template>
+        </p-table>
+      </ng-container>
+    </p-tabPanel>
+
+    <!-- 5. Consulta (solo lectura) -->
+    <p-tabPanel header="Consulta" [disabled]="!currentSeq">
+      <p-table [value]="team" styleClass="p-datatable-sm" *ngIf="currentSeq">
+        <ng-template pTemplate="header"><tr><th>Consultor</th><th>Rol</th><th>Fecha asignación</th></tr></ng-template>
+        <ng-template pTemplate="body" let-member>
+          <tr><td>{{ member.memberName }}</td><td>{{ member.projectrol }}</td><td>{{ member.assignmentdate }}</td></tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage"><tr><td colspan="3">Sin integrantes asignados.</td></tr></ng-template>
+      </p-table>
+    </p-tabPanel>
+
+    <!-- 6. Avance -->
+    <p-tabPanel header="Avance" [disabled]="!currentSeq">
+      <div class="form-grid" *ngIf="detail">
+        <div class="field"><label><b>Fecha último corte</b></label><div>{{ detail.lastcutoffdate || '—' }}</div></div>
+        <div class="field"><label><b>% Avance esperado</b></label><div>{{ detail.advexpectedperc ?? '—' }}</div></div>
+        <div class="field"><label><b>% Avance real</b></label><div>{{ detail.advrealperc ?? '—' }}</div></div>
+        <div class="field"><label><b>Días de avance esperados</b></label><div>{{ detail.advexpecteddays ?? '—' }}</div></div>
+        <div class="field"><label><b>Días de avance real</b></label><div>{{ detail.advrealdays ?? '—' }}</div></div>
+        <div class="field"><label><b>Días consumidos</b></label><div>{{ detail.daysconsumed ?? '—' }}</div></div>
+        <div class="field"><label><b>% Variación asignación planificada</b></label><div>{{ detail.varadvplannedperc ?? '—' }}</div></div>
+        <div class="field"><label><b>% Efectividad</b></label><div>{{ detail.efectivityperc ?? '—' }}</div></div>
+      </div>
+      <div class="form-actions">
+        <button pButton type="button" label="Registrar avance" icon="pi pi-chart-line" (click)="openProgressForm()"></button>
+      </div>
+    </p-tabPanel>
+
+    <!-- 7. Schedule Proyecto -->
+    <p-tabPanel header="Schedule proyecto" [disabled]="!currentSeq">
+      <ng-container *ngIf="currentSeq">
+        <div class="form-actions">
+          <button pButton type="button" label="+ Nueva actividad" icon="pi pi-plus" (click)="openScheduleForm()"></button>
+        </div>
+        <p-table [value]="schedule" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Descripción</th><th>Responsable</th><th>Días base</th><th>Días adicional</th>
+              <th>Total días base</th><th>Fecha inicio base</th><th>Fecha fin base</th><th></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr *ngIf="editingScheduleSeq !== row.seqschedule">
+              <td [style.paddingLeft]="indentFor(row)">
+                <b *ngIf="row.padre">{{ row.shortactivitydesc }}</b>
+                <span *ngIf="!row.padre">{{ row.shortactivitydesc }}</span>
+              </td>
+              <td>{{ row.memberName || '—' }}</td>
+              <td>{{ row.basedays ?? '—' }}</td>
+              <td>{{ row.baseadicional ?? '—' }}</td>
+              <td>{{ row.basedaystotal ?? '—' }}</td>
+              <td>{{ row.baseStartDate || '—' }}</td>
+              <td>{{ row.baseEndDate || '—' }}</td>
+              <td>
+                <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
+                        (click)="startEditSchedule(row)"></button>
+                <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+                        (click)="deleteSchedule(row)"></button>
+              </td>
+            </tr>
+            <tr *ngIf="editingScheduleSeq === row.seqschedule">
+              <td colspan="2">
+                <input pInputText [(ngModel)]="editingScheduleForm.shortactivitydesc" [ngModelOptions]="{standalone: true}"
+                       placeholder="Descripción" />
+                <textarea pInputTextarea [(ngModel)]="editingScheduleForm.activitydesc" [ngModelOptions]="{standalone: true}"
+                          rows="1" placeholder="Descripción larga"></textarea>
+              </td>
+              <ng-container *ngIf="!row.padre">
+                <td>
+                  <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="editingScheduleForm.memberuser"
+                              [ngModelOptions]="{standalone: true}" placeholder="Responsable" [filter]="true"></p-dropdown>
+                </td>
+                <td><p-inputNumber [(ngModel)]="editingScheduleForm.basedays" [ngModelOptions]="{standalone: true}"></p-inputNumber></td>
+                <td><p-inputNumber [(ngModel)]="editingScheduleForm.baseadicional" [ngModelOptions]="{standalone: true}"></p-inputNumber></td>
+                <td>—</td>
+                <td>
+                  <p-calendar [(ngModel)]="editingScheduleForm.baseStartDate" [ngModelOptions]="{standalone: true}"
+                              dateFormat="yy-mm-dd" dataType="string"></p-calendar>
+                  <p-calendar [(ngModel)]="editingScheduleForm.baseEndDate" [ngModelOptions]="{standalone: true}"
+                              dateFormat="yy-mm-dd" dataType="string"></p-calendar>
+                </td>
+              </ng-container>
+              <td [attr.colspan]="row.padre ? 5 : 1">
+                <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-sm" (click)="saveEditSchedule()"></button>
+                <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm" (click)="cancelEditSchedule()"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage"><tr><td colspan="8">Sin actividades registradas.</td></tr></ng-template>
+        </p-table>
+      </ng-container>
+    </p-tabPanel>
+
+    <!-- 8. Riesgos -->
+    <p-tabPanel header="Riesgos" [disabled]="!currentSeq">
+      <ng-container *ngIf="currentSeq">
+        <div class="inline-form wrap">
+          <p-calendar [(ngModel)]="newRisk.riskdate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"
+                      placeholder="Fecha identificación" [showIcon]="true"></p-calendar>
+          <p-dropdown [options]="riskTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newRisk.risktypeimpact"
+                      [ngModelOptions]="{standalone: true}" placeholder="Tipo de impacto"></p-dropdown>
+          <input pInputText [(ngModel)]="newRisk.riskdescimpact" [ngModelOptions]="{standalone: true}" placeholder="Descripción del impacto" />
+          <input pInputText [(ngModel)]="newRisk.personincharge" [ngModelOptions]="{standalone: true}" placeholder="Responsable" />
+          <input pInputText [(ngModel)]="newRisk.company" [ngModelOptions]="{standalone: true}" placeholder="Compañía" />
+          <p-inputNumber [(ngModel)]="newRisk.probabilityperc" [ngModelOptions]="{standalone: true}" placeholder="Probabilidad %" suffix="%"></p-inputNumber>
+          <button pButton type="button" label="+ Nuevo Riesgo" icon="pi pi-plus" (click)="addRisk()"></button>
+        </div>
+        <p-table [value]="risks" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr><th>Fecha</th><th>Tipo impacto</th><th>Descripción</th><th>Responsable</th><th>Compañía</th>
+                <th>Solución</th><th>Prob. %</th><th>Estado</th><th></th></tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr *ngIf="editingRiskSeq !== row.seqrisk">
+              <td>{{ row.riskdate }}</td>
+              <td>{{ row.risktypeimpactName }}</td>
+              <td>{{ row.riskdescimpact }}</td>
+              <td>{{ row.personincharge }}</td>
+              <td>{{ row.company }}</td>
+              <td>{{ row.solution || '—' }}</td>
+              <td>{{ row.probabilityperc }}</td>
+              <td>{{ row.riskstatusName }}</td>
+              <td>
+                <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="startEditRisk(row)"></button>
+                <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteRisk(row)"></button>
+              </td>
+            </tr>
+            <tr *ngIf="editingRiskSeq === row.seqrisk">
+              <td><p-calendar [(ngModel)]="editingRiskForm.riskdate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"></p-calendar></td>
+              <td>
+                <p-dropdown [options]="riskTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingRiskForm.risktypeimpact"
+                            [ngModelOptions]="{standalone: true}"></p-dropdown>
+              </td>
+              <td><input pInputText [(ngModel)]="editingRiskForm.riskdescimpact" [ngModelOptions]="{standalone: true}" /></td>
+              <td><input pInputText [(ngModel)]="editingRiskForm.personincharge" [ngModelOptions]="{standalone: true}" /></td>
+              <td><input pInputText [(ngModel)]="editingRiskForm.company" [ngModelOptions]="{standalone: true}" /></td>
+              <td><input pInputText [(ngModel)]="editingRiskForm.solution" [ngModelOptions]="{standalone: true}" /></td>
+              <td><p-inputNumber [(ngModel)]="editingRiskForm.probabilityperc" [ngModelOptions]="{standalone: true}" suffix="%"></p-inputNumber></td>
+              <td>
+                <p-dropdown [options]="riskStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingRiskForm.riskstatus"
+                            [ngModelOptions]="{standalone: true}"></p-dropdown>
+              </td>
+              <td>
+                <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-sm" (click)="saveEditRisk()"></button>
+                <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm" (click)="cancelEditRisk()"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage"><tr><td colspan="9">Sin riesgos registrados.</td></tr></ng-template>
+        </p-table>
+      </ng-container>
+    </p-tabPanel>
+
+    <!-- 9. Novedades -->
+    <p-tabPanel header="Novedades" [disabled]="!currentSeq">
+      <ng-container *ngIf="currentSeq">
+        <div class="inline-form wrap">
+          <p-calendar [(ngModel)]="newNews.datenewarrival" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"
+                      placeholder="Fecha novedad" [showIcon]="true"></p-calendar>
+          <p-dropdown [options]="newsTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newNews.newstypeimpact"
+                      [ngModelOptions]="{standalone: true}" placeholder="Tipo de impacto"></p-dropdown>
+          <input pInputText [(ngModel)]="newNews.descriptionnews" [ngModelOptions]="{standalone: true}" placeholder="Descripción" />
+          <input pInputText [(ngModel)]="newNews.personreporting" [ngModelOptions]="{standalone: true}" placeholder="Persona que reporta" />
+          <input pInputText [(ngModel)]="newNews.affectation" [ngModelOptions]="{standalone: true}" placeholder="Afectación" />
+          <input pInputText [(ngModel)]="newNews.personincharge" [ngModelOptions]="{standalone: true}" placeholder="Responsable" />
+          <input pInputText [(ngModel)]="newNews.company" [ngModelOptions]="{standalone: true}" placeholder="Compañía" />
+          <button pButton type="button" label="+ Nueva Novedad" icon="pi pi-plus" (click)="addNews()"></button>
+        </div>
+        <p-table [value]="news" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr><th>Fecha</th><th>Tipo impacto</th><th>Descripción</th><th>Reporta</th><th>Afectación</th>
+                <th>Responsable</th><th>Compañía</th><th>Solución</th><th>Estado</th><th></th></tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr *ngIf="editingNewsSeq !== row.seqNews">
+              <td>{{ row.datenewarrival }}</td>
+              <td>{{ row.newstypeimpactName }}</td>
+              <td>{{ row.descriptionnews }}</td>
+              <td>{{ row.personreporting }}</td>
+              <td>{{ row.affectation }}</td>
+              <td>{{ row.personincharge }}</td>
+              <td>{{ row.company }}</td>
+              <td>{{ row.solution || '—' }}</td>
+              <td>{{ row.newstatusName }}</td>
+              <td>
+                <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="startEditNews(row)"></button>
+                <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteNews(row)"></button>
+              </td>
+            </tr>
+            <tr *ngIf="editingNewsSeq === row.seqNews">
+              <td><p-calendar [(ngModel)]="editingNewsForm.datenewarrival" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"></p-calendar></td>
+              <td>
+                <p-dropdown [options]="newsTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingNewsForm.newstypeimpact"
+                            [ngModelOptions]="{standalone: true}"></p-dropdown>
+              </td>
+              <td><input pInputText [(ngModel)]="editingNewsForm.descriptionnews" [ngModelOptions]="{standalone: true}" /></td>
+              <td><input pInputText [(ngModel)]="editingNewsForm.personreporting" [ngModelOptions]="{standalone: true}" /></td>
+              <td><input pInputText [(ngModel)]="editingNewsForm.affectation" [ngModelOptions]="{standalone: true}" /></td>
+              <td><input pInputText [(ngModel)]="editingNewsForm.personincharge" [ngModelOptions]="{standalone: true}" /></td>
+              <td><input pInputText [(ngModel)]="editingNewsForm.company" [ngModelOptions]="{standalone: true}" /></td>
+              <td><input pInputText [(ngModel)]="editingNewsForm.solution" [ngModelOptions]="{standalone: true}" /></td>
+              <td>
+                <p-dropdown [options]="newsStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingNewsForm.newstatus"
+                            [ngModelOptions]="{standalone: true}"></p-dropdown>
+              </td>
+              <td>
+                <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-sm" (click)="saveEditNews()"></button>
+                <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm" (click)="cancelEditNews()"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage"><tr><td colspan="10">Sin novedades registradas.</td></tr></ng-template>
+        </p-table>
+      </ng-container>
+    </p-tabPanel>
+
+    <!-- 10. Auditoría (solo lectura) -->
+    <p-tabPanel header="Auditoría" [disabled]="!currentSeq">
+      <div class="form-grid" *ngIf="detail">
+        <div class="field"><label><b>Creado por</b></label><div>{{ detail.usercreateName }}</div></div>
+        <div class="field"><label><b>Fecha de creación</b></label><div>{{ detail.datecreate }}</div></div>
+        <div class="field"><label><b>Última modificación por</b></label><div>{{ detail.userlastmodifyName }}</div></div>
+        <div class="field"><label><b>Fecha de modificación</b></label><div>{{ detail.datemodify }}</div></div>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+
+  <div class="dialog-footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="close()"></button>
+  </div>
+</div>
+
+<p-dialog [(visible)]="scheduleFormVisible" [modal]="true" header="Nueva actividad" [style]="{width: '30rem'}">
+  <div class="form-grid one-col">
+    <div class="field">
+      <label><b>Relación jerárquica</b></label>
+      <p-dropdown [options]="[{label:'Padre', value:'PADRE'},{label:'Hermano', value:'HERMANO'},{label:'Hijo', value:'HIJO'}]"
+                  optionLabel="label" optionValue="value" [(ngModel)]="scheduleForm.hierarchyType"
+                  [ngModelOptions]="{standalone: true}"></p-dropdown>
+    </div>
+    <div class="field" *ngIf="scheduleForm.hierarchyType !== 'PADRE'">
+      <label><b>Actividad de referencia</b></label>
+      <p-dropdown [options]="schedule" optionLabel="shortactivitydesc" optionValue="seqschedule"
+                  [(ngModel)]="scheduleForm.referenceSeqschedule" [ngModelOptions]="{standalone: true}"
+                  placeholder="Seleccione actividad"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Descripción</b></label>
+      <input pInputText [(ngModel)]="scheduleForm.shortactivitydesc" [ngModelOptions]="{standalone: true}" />
+    </div>
+    <div class="field">
+      <label><b>Descripción larga</b></label>
+      <textarea pInputTextarea [(ngModel)]="scheduleForm.activitydesc" [ngModelOptions]="{standalone: true}" rows="2"></textarea>
+    </div>
+    <ng-container *ngIf="scheduleForm.hierarchyType === 'HIJO'">
+      <div class="field">
+        <label><b>Responsable</b></label>
+        <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="scheduleForm.memberuser"
+                    [ngModelOptions]="{standalone: true}" [filter]="true"></p-dropdown>
+      </div>
+      <div class="field">
+        <label><b>Días base</b></label>
+        <p-inputNumber [(ngModel)]="scheduleForm.basedays" [ngModelOptions]="{standalone: true}"></p-inputNumber>
+      </div>
+      <div class="field">
+        <label><b>Días adicional</b></label>
+        <p-inputNumber [(ngModel)]="scheduleForm.baseadicional" [ngModelOptions]="{standalone: true}"></p-inputNumber>
+      </div>
+      <div class="field">
+        <label><b>Fecha inicio base</b></label>
+        <p-calendar [(ngModel)]="scheduleForm.baseStartDate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"></p-calendar>
+      </div>
+      <div class="field">
+        <label><b>Fecha fin base</b></label>
+        <p-calendar [(ngModel)]="scheduleForm.baseEndDate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"></p-calendar>
+      </div>
+    </ng-container>
+  </div>
+  <div class="dialog-footer">
+    <button pButton type="button" label="Guardar" icon="pi pi-save" (click)="submitScheduleForm()"></button>
+  </div>
+</p-dialog>
+
+<p-dialog [(visible)]="progressFormVisible" [modal]="true" header="Registrar avance" [style]="{width: '30rem'}">
+  <div class="form-grid one-col">
+    <div class="field">
+      <label><b>Fecha de corte</b></label>
+      <p-calendar [(ngModel)]="progressForm.lastcutoffdate" [ngModelOptions]="{standalone: true}"
+                  dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar>
+    </div>
+    <div class="field">
+      <label><b>% Avance esperado</b></label>
+      <p-inputNumber [(ngModel)]="progressForm.advexpectedperc" [ngModelOptions]="{standalone: true}" suffix="%"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label><b>% Avance real</b></label>
+      <p-inputNumber [(ngModel)]="progressForm.advrealperc" [ngModelOptions]="{standalone: true}" suffix="%"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label><b>Días de avance esperados</b></label>
+      <p-inputNumber [(ngModel)]="progressForm.advexpecteddays" [ngModelOptions]="{standalone: true}"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label><b>Días de avance real</b></label>
+      <p-inputNumber [(ngModel)]="progressForm.advrealdays" [ngModelOptions]="{standalone: true}"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label><b>Días consumidos</b></label>
+      <p-inputNumber [(ngModel)]="progressForm.daysconsumed" [ngModelOptions]="{standalone: true}"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label><b>% Variación asignación planificada</b></label>
+      <p-inputNumber [(ngModel)]="progressForm.varadvplannedperc" [ngModelOptions]="{standalone: true}" suffix="%"></p-inputNumber>
+    </div>
+    <div class="field">
+      <label><b>% Efectividad</b></label>
+      <p-inputNumber [(ngModel)]="progressForm.efectivityperc" [ngModelOptions]="{standalone: true}" suffix="%"></p-inputNumber>
+    </div>
+  </div>
+  <div class="dialog-footer">
+    <button pButton type="button" label="Guardar" icon="pi pi-save" (click)="submitProgressForm()"></button>
+  </div>
+</p-dialog>

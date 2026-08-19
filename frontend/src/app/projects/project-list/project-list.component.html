@@ -1,0 +1,66 @@
+<p-toast></p-toast>
+<p-confirmDialog [style]="{width: '30rem'}"></p-confirmDialog>
+
+<div class="project-list-page">
+  <div class="page-header">
+    <h2>Proyectos</h2>
+    <button pButton type="button" label="+ Nuevo Proyecto" icon="pi pi-plus" (click)="openNew()"></button>
+  </div>
+
+  <p-table [value]="projects" [loading]="loading" [paginator]="true" [rows]="10"
+           responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-striped">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Secuencia proyecto</th>
+        <th>Apertura proyecto</th>
+        <th>Código proyecto</th>
+        <th>Nombre</th>
+        <th>Cliente</th>
+        <th>Cód. PM</th>
+        <th>Nombre PM</th>
+        <th>Duración base</th>
+        <th>Fecha inicio base</th>
+        <th>Fecha fin base</th>
+        <th>Duración planificada</th>
+        <th>Fecha inicio planificación</th>
+        <th>Fecha fin planificación</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-project>
+      <tr>
+        <td>{{ project.seq }}</td>
+        <td>{{ project.requestDate }}</td>
+        <td>{{ project.projectCode }}</td>
+        <td>{{ project.projectName }}</td>
+        <td>{{ project.customerName }}</td>
+        <td>{{ project.codeuserPm }}</td>
+        <td>{{ project.pmName }}</td>
+        <td>{{ project.baseDurationDays }}</td>
+        <td>{{ project.baseStartDate }}</td>
+        <td>{{ project.baseEndDate }}</td>
+        <td>{{ project.plannedDurationDays }}</td>
+        <td>{{ project.plannedStartDate }}</td>
+        <td>{{ project.plannedEndDate }}</td>
+        <td>{{ project.statusName }}</td>
+        <td>
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
+                  (click)="openEdit(project)" pTooltip="Editar"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+                  (click)="confirmDelete(project)" pTooltip="Eliminar"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="15">No hay proyectos registrados.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog [(visible)]="showForm" [modal]="true" [style]="{width: '90vw', maxWidth: '1100px'}"
+          [header]="selectedSeq ? 'Editar Proyecto' : 'Nuevo Proyecto'" [dismissableMask]="false">
+  <app-project-form *ngIf="showForm" [seq]="selectedSeq" (closed)="onFormClosed($event)"></app-project-form>
+</p-dialog>

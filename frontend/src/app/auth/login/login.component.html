@@ -1,0 +1,19 @@
+<div class="login-page">
+  <form class="login-card" (ngSubmit)="submit()">
+    <h1>Gestión y Control de Proyectos</h1>
+    <p class="subtitle">TimeSheets — Iniciar sesión</p>
+
+    <div class="field">
+      <label><b>Correo</b></label>
+      <input type="email" name="email" [(ngModel)]="email" autocomplete="username" />
+    </div>
+    <div class="field">
+      <label><b>Contraseña</b></label>
+      <input type="password" name="password" [(ngModel)]="password" autocomplete="current-password" />
+    </div>
+
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <button pButton type="submit" label="Ingresar" [loading]="loading" class="submit-btn"></button>
+  </form>
+</div>

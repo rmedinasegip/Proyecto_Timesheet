@@ -1,0 +1,168 @@
+<p-toast></p-toast>
+<p-confirmDialog [style]="{width: '30rem'}"></p-confirmDialog>
+
+<div class="timesheet-page">
+  <div class="page-header">
+    <h2>Registro de timesheets</h2>
+    <button pButton type="button" label="+ Nuevo registro" icon="pi pi-plus" (click)="openNew()"></button>
+  </div>
+
+  <div class="filters">
+    <div class="field">
+      <label><b>Consultor</b></label>
+      <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="filters.memberuser"
+                  [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Desde</b></label>
+      <input type="date" [(ngModel)]="filters.dateFrom" class="native-date" />
+    </div>
+    <div class="field">
+      <label><b>Hasta</b></label>
+      <input type="date" [(ngModel)]="filters.dateTo" class="native-date" />
+    </div>
+    <div class="field">
+      <label><b>Proyecto</b></label>
+      <p-dropdown [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="filters.seqproject"
+                  [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Status</b></label>
+      <p-dropdown [options]="statusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="filters.status"
+                  [showClear]="true" placeholder="Todos"></p-dropdown>
+    </div>
+    <div class="field filter-actions">
+      <button pButton type="button" label="Buscar" icon="pi pi-search" (click)="reload()"></button>
+      <button pButton type="button" label="Limpiar" class="p-button-text" (click)="clearFilters()"></button>
+    </div>
+  </div>
+
+  <div class="totals">
+    <b>Total horas filtradas:</b> {{ totalHours }}
+  </div>
+
+  <p-table [value]="entries" [loading]="loading" [paginator]="true" [rows]="10"
+           responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-striped">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Empresa</th>
+        <th>Cliente</th>
+        <th>Proyecto / Incidencia</th>
+        <th>Sistema</th>
+        <th>Módulo</th>
+        <th>Sprint</th>
+        <th>Tipo actividad</th>
+        <th>Descripción</th>
+        <th>Fecha</th>
+        <th>Hora inicio</th>
+        <th>Hora fin</th>
+        <th>Horas</th>
+        <th>Status</th>
+        <th>Revisado por</th>
+        <th>Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-entry>
+      <tr>
+        <td>{{ entry.codecompanyconsultantName }}</td>
+        <td>{{ entry.customerName }}</td>
+        <td>{{ entry.projectName || entry.incidentref || '—' }}</td>
+        <td>{{ entry.systemName }}</td>
+        <td>{{ entry.moduleName }}</td>
+        <td>{{ entry.sprint || '—' }}</td>
+        <td>{{ entry.activitytypeName }}</td>
+        <td>{{ entry.activitydesc }}</td>
+        <td>{{ entry.tsdate }}</td>
+        <td>{{ entry.starttime }}</td>
+        <td>{{ entry.endtime }}</td>
+        <td>{{ entry.hoursconsumed }}</td>
+        <td>{{ entry.statusName }}</td>
+        <td>{{ entry.reviewedbyName || '—' }}</td>
+        <td class="actions-cell">
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
+                  (click)="openEdit(entry)" pTooltip="Editar"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+                  (click)="confirmDelete(entry)" pTooltip="Eliminar"></button>
+          <ng-container *ngIf="entry.status === 'REG' && canReview">
+            <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-success p-button-sm"
+                    (click)="approve(entry)" pTooltip="Aprobar"></button>
+            <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-danger p-button-sm"
+                    (click)="reject(entry)" pTooltip="Rechazar"></button>
+          </ng-container>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="15">No hay registros para los filtros seleccionados.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog [(visible)]="formVisible" [modal]="true" [style]="{width: '40rem'}"
+          [header]="editingSeqts ? 'Editar registro' : 'Nuevo registro'" [dismissableMask]="false">
+  <div class="form-grid">
+    <div class="field">
+      <label><b>Nombre consultor</b></label>
+      <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="form.memberuser"
+                  [ngModelOptions]="{standalone: true}" placeholder="Seleccione consultor" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Empresa</b></label>
+      <p-dropdown [options]="companies" optionLabel="name" optionValue="id.code" [(ngModel)]="form.codecompanyconsultant"
+                  [ngModelOptions]="{standalone: true}" placeholder="Seleccione empresa"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Cliente</b></label>
+      <p-dropdown [options]="customers" optionLabel="name" optionValue="code" [(ngModel)]="form.codecustomer"
+                  [ngModelOptions]="{standalone: true}" placeholder="Seleccione cliente" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Proyecto</b></label>
+      <p-dropdown [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="form.seqproject"
+                  [ngModelOptions]="{standalone: true}" placeholder="(vacío si es incidencia)" [showClear]="true" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Sprint</b></label>
+      <input pInputText [(ngModel)]="form.sprint" [ngModelOptions]="{standalone: true}" placeholder="Solo si es proyecto" />
+    </div>
+    <div class="field full">
+      <label><b>Incidencia</b></label>
+      <input pInputText [(ngModel)]="form.incidentref" [ngModelOptions]="{standalone: true}" placeholder="Número y descripción, solo si es incidencia" />
+    </div>
+    <div class="field">
+      <label><b>Sistema</b></label>
+      <p-dropdown [options]="systemItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.system"
+                  [ngModelOptions]="{standalone: true}" placeholder="Seleccione sistema"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Módulo</b></label>
+      <p-dropdown [options]="moduleItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.module"
+                  [ngModelOptions]="{standalone: true}" placeholder="Seleccione módulo" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Tipo actividad</b></label>
+      <p-dropdown [options]="activityTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.activitytype"
+                  [ngModelOptions]="{standalone: true}" placeholder="Seleccione tipo"></p-dropdown>
+    </div>
+    <div class="field full">
+      <label><b>Descripción de actividad</b></label>
+      <textarea pInputTextarea [(ngModel)]="form.activitydesc" [ngModelOptions]="{standalone: true}" rows="2"></textarea>
+    </div>
+    <div class="field">
+      <label><b>Fecha</b></label>
+      <input type="date" [(ngModel)]="form.tsdate" [ngModelOptions]="{standalone: true}" class="native-date" />
+    </div>
+    <div class="field">
+      <label><b>Hora inicio</b></label>
+      <input type="time" [(ngModel)]="form.starttime" [ngModelOptions]="{standalone: true}" class="native-date" />
+    </div>
+    <div class="field">
+      <label><b>Hora fin</b></label>
+      <input type="time" [(ngModel)]="form.endtime" [ngModelOptions]="{standalone: true}" class="native-date" />
+    </div>
+  </div>
+  <div class="dialog-footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="formVisible = false"></button>
+    <button pButton type="button" label="Guardar" icon="pi pi-save" (click)="submitForm()"></button>
+  </div>
+</p-dialog>

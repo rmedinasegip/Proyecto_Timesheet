@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: timesheet-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+
+# Fase 5: JWT firmado (HS256). Secreto de desarrollo/piloto — para un
+# despliegue real este valor debe venir de una variable de entorno propia,
+# no quedar en el repo (igual que DATABASE_URL/etc en el proyecto Next.js
+# hermano), pero este proyecto ya guarda las credenciales de Postgres
+# inline en este mismo archivo para desarrollo local, así que se mantiene
+# el mismo criterio aquí.
+jwt:
+  secret: "llacsaa-timesheet-dev-secret-2026-cambiar-en-produccion"
+  expires-in-hours: 24

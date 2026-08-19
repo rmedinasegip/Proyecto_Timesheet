@@ -1,0 +1,81 @@
+.timesheet-page {
+  padding: 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.page-header h2 {
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #f4f6f8;
+  border-radius: 4px;
+}
+
+.filters .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 160px;
+}
+
+.filter-actions {
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.native-date {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+.totals {
+  margin-bottom: 0.75rem;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.field.full {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  font-size: 0.85rem;
+}
+
+.field input,
+.field textarea,
+.field p-dropdown {
+  width: 100%;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 1rem;
+}
