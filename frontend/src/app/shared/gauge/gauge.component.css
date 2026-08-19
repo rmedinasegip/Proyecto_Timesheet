@@ -1,0 +1,54 @@
+.gauge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.gauge__scale {
+  position: relative;
+  width: 3rem;
+  height: 0.5rem;
+  background: var(--grid);
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+
+.gauge__zero {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--grid-strong);
+  transform: translateX(-0.5px);
+}
+
+.gauge__mark {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 3px;
+  background: var(--pine);
+  transform: translateX(-1.5px);
+}
+
+.gauge--negative .gauge__mark {
+  background: var(--alert);
+}
+
+.gauge__value {
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.gauge__value--empty {
+  color: var(--ink-muted);
+}
+
+.gauge__unit {
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+  margin-left: 1px;
+}

@@ -1,0 +1,8 @@
+<span class="gauge" [class.gauge--negative]="isNegative" *ngIf="value != null; else empty">
+  <span class="gauge__scale">
+    <span class="gauge__zero" [style.left.%]="zeroPosition"></span>
+    <span class="gauge__mark" [style.left.%]="position"></span>
+  </span>
+  <span class="gauge__value">{{ value }}<span class="gauge__unit">%</span></span>
+</span>
+<ng-template #empty><span class="gauge__value gauge__value--empty">—</span></ng-template>

@@ -25,6 +25,7 @@ import { TimesheetListComponent } from './timesheet/timesheet-list/timesheet-lis
 import { ProgressReportComponent } from './progress/progress-report/progress-report.component';
 import { LoginComponent } from './auth/login/login.component';
 import { AuthInterceptor } from './auth/interceptors/auth.interceptor';
+import { GaugeComponent } from './shared/gauge/gauge.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { AuthInterceptor } from './auth/interceptors/auth.interceptor';
     ProjectFormComponent,
     TimesheetListComponent,
     ProgressReportComponent,
-    LoginComponent
+    LoginComponent,
+    GaugeComponent
   ],
   imports: [
     BrowserModule,

@@ -3,13 +3,15 @@
 
 <div class="progress-page">
   <div class="page-header">
-    <h2>Avance de proyectos</h2>
+    <span class="eyebrow">Gestión y control</span>
+    <h2 class="page-title">Avance de proyectos</h2>
   </div>
+  <div class="ruler-divider"></div>
 
   <div class="filters">
     <div class="field">
       <label><b>Proyecto</b></label>
-      <p-dropdown [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="seqproject"
+      <p-dropdown [appendTo]="'body'" [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="seqproject"
                   (onChange)="onProjectChange()" placeholder="Seleccione proyecto" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
@@ -58,13 +60,13 @@
             <td>{{ row.expectedAdvanceDays ?? '—' }}</td>
             <td>{{ row.realAdvanceDays ?? '—' }}</td>
             <td>{{ row.daysToInvest ?? '—' }}</td>
-            <td>{{ row.advanceVariationPerc ?? '—' }}</td>
+            <td><app-gauge [value]="row.advanceVariationPerc"></app-gauge></td>
             <td>{{ row.daysConsumedTs ?? '—' }}</td>
             <td>{{ row.balanceDaysTs ?? '—' }}</td>
-            <td>{{ row.plannedAssignmentVariationPerc ?? '—' }}</td>
-            <td>{{ row.currentAdvancePerc ?? '—' }}</td>
-            <td>{{ row.realAdvancePerc ?? '—' }}</td>
-            <td>{{ row.effectivenessPerc ?? '—' }}</td>
+            <td><app-gauge [value]="row.plannedAssignmentVariationPerc"></app-gauge></td>
+            <td><app-gauge [value]="row.currentAdvancePerc" [min]="0" [max]="100"></app-gauge></td>
+            <td><app-gauge [value]="row.realAdvancePerc" [min]="0" [max]="100"></app-gauge></td>
+            <td><app-gauge [value]="row.effectivenessPerc" [min]="0" [max]="100"></app-gauge></td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage"><tr><td colspan="14">Sin fases registradas en el Schedule del proyecto.</td></tr></ng-template>
@@ -91,8 +93,8 @@
             <td>{{ row.totalDays ?? '—' }}</td>
             <td>{{ row.baseStartDate || '—' }}</td>
             <td>{{ row.baseEndDate || '—' }}</td>
-            <td>{{ row.realAdvancePerc ?? '—' }}</td>
-            <td>{{ row.effectivenessPerc ?? '—' }}</td>
+            <td><app-gauge [value]="row.realAdvancePerc" [min]="0" [max]="100"></app-gauge></td>
+            <td><app-gauge [value]="row.effectivenessPerc" [min]="0" [max]="100"></app-gauge></td>
             <td>{{ row.daysConsumedTs ?? '—' }}</td>
           </tr>
         </ng-template>

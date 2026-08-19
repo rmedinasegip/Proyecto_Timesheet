@@ -1,1 +1,380 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Design concept: a field-ops drafting console, not a generic admin
+ * dashboard. This app's whole job is measuring — hours against a clock,
+ * days against a schedule, percent against a plan — so the visual language
+ * borrows from technical drawing instruments: graph-paper ground, a ruled
+ * "ruler tick" divider used everywhere a section needs a seam, and a
+ * signature inline gauge (see gauge.component) that turns every raw
+ * percentage in this app into a small measured mark on a scale instead of
+ * a bare number. Crisp corners throughout (no PrimeNG default rounding) —
+ * an instrument panel, not a SaaS card stack.
+ */
+
+:root {
+  --paper: #eaede6;
+  --surface: #f6f7f2;
+  --surface-raised: #ffffff;
+  --ink: #1d2420;
+  --ink-muted: #5b6459;
+  --grid: #c7d0c0;
+  --grid-strong: #9fab94;
+  --signal: #b5541e;
+  --signal-ink: #ffffff;
+  --signal-hover: #943f13;
+  --pine: #2c5c4c;
+  --pine-bg: #dfe8e1;
+  --alert: #9c3b2e;
+  --alert-bg: #f1ddd6;
+  --alert-hover: #7f2e23;
+
+  --font-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-body: 'Public Sans', 'Segoe UI', Arial, sans-serif;
+  --font-data: 'JetBrains Mono', 'Consolas', monospace;
+
+  --radius: 2px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--grid) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--grid) 55%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  margin: 0;
+}
+
+a {
+  color: var(--signal);
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---- Signature structural device: the ruler-tick divider ---- */
+/* A ruled line with perpendicular ticks, like a measuring instrument —
+   used under page mastheads and section headers wherever a plain <hr>
+   would otherwise sit. Encodes the app's own idea of itself: everything
+   here is measured against a scale. */
+.ruler-divider {
+  height: 8px;
+  margin: 0.75rem 0 1.5rem;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--grid-strong) 0,
+    var(--grid-strong) 1px,
+    transparent 1px,
+    transparent 12px
+  );
+  background-position: bottom;
+  background-repeat: repeat-x;
+  background-size: 12px 8px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.eyebrow {
+  display: block;
+  font-family: var(--font-data);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.page-title {
+  font-size: 2rem;
+  text-transform: uppercase;
+}
+
+.data {
+  font-family: var(--font-data);
+}
+
+/* ================= PrimeNG overrides ================= */
+/* saga-blue theme.css ships hardcoded colors (PrimeNG 12 predates
+   CSS-variable theming) — overridden directly by selector rather than a
+   token indirection PrimeNG itself doesn't support at this version. */
+
+.p-component,
+.p-inputtext,
+.p-dropdown-panel,
+.p-dialog,
+.p-tabview,
+.p-datatable,
+.p-toast-message,
+.p-confirm-dialog {
+  font-family: var(--font-body) !important;
+}
+
+/* Buttons */
+.p-button {
+  background: var(--signal);
+  border: 1px solid var(--signal);
+  border-radius: var(--radius);
+  color: var(--signal-ink);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.p-button:enabled:hover,
+.p-button:enabled:active {
+  background: var(--signal-hover);
+  border-color: var(--signal-hover);
+  color: var(--signal-ink);
+}
+.p-button:focus {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--signal);
+}
+.p-button.p-button-text {
+  background: transparent;
+  color: var(--ink-muted);
+  border-color: transparent;
+}
+.p-button.p-button-text:enabled:hover {
+  background: color-mix(in srgb, var(--grid) 40%, transparent);
+  color: var(--ink);
+}
+.p-button.p-button-danger,
+.p-button.p-button-danger.p-button-text {
+  color: var(--alert);
+}
+.p-button.p-button-danger:not(.p-button-text) {
+  background: var(--alert);
+  border-color: var(--alert);
+  color: #fff;
+}
+.p-button.p-button-danger:enabled:hover {
+  background: var(--alert-hover);
+  border-color: var(--alert-hover);
+}
+.p-button.p-button-success,
+.p-button.p-button-success.p-button-text {
+  color: var(--pine);
+}
+
+/* Inputs / dropdowns / calendar / inputnumber */
+.p-inputtext,
+.p-dropdown,
+.p-multiselect {
+  background: var(--surface-raised);
+  border: 1px solid var(--grid-strong);
+  border-radius: var(--radius);
+  color: var(--ink);
+}
+.p-inputtext:enabled:focus,
+.p-dropdown:not(.p-disabled).p-focus,
+.p-multiselect:not(.p-disabled).p-focus {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 1px var(--signal);
+}
+.p-dropdown-panel,
+.p-datepicker {
+  background: var(--surface-raised);
+  border: 1px solid var(--grid-strong);
+  border-radius: var(--radius);
+}
+.p-dropdown-item.p-highlight,
+.p-datepicker table td > span.p-highlight {
+  background: var(--signal);
+  color: var(--signal-ink);
+}
+.p-dropdown-item:not(.p-highlight):hover,
+.p-datepicker table td:not(.p-datepicker-other-month) span:hover {
+  background: var(--pine-bg);
+}
+.p-datepicker .p-datepicker-header {
+  background: var(--surface);
+  border-color: var(--grid);
+}
+.p-inputnumber-input {
+  font-family: var(--font-data);
+}
+
+/* The calendar popup ships at PrimeNG's default scale (2.5rem cells) —
+   oversized next to this app's compact fields. Shrunk to a scale that
+   matches the rest of the instrument panel, and capped so it never
+   outgrows a small dialog or a phone screen. */
+.p-datepicker {
+  width: auto;
+  max-width: calc(100vw - 2rem);
+  font-size: 0.85rem;
+}
+.p-datepicker .p-datepicker-header .p-datepicker-prev,
+.p-datepicker .p-datepicker-header .p-datepicker-next {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+.p-datepicker .p-datepicker-header .p-datepicker-title {
+  line-height: 1.6rem;
+  font-size: 0.85rem;
+}
+.p-datepicker table {
+  font-size: 0.85rem;
+  margin: 0.3rem 0;
+}
+.p-datepicker table th,
+.p-datepicker table td {
+  padding: 0.2rem;
+}
+.p-datepicker table th > span,
+.p-datepicker table td > span {
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+/* Table */
+.p-datatable .p-datatable-thead > tr > th {
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.p-datatable .p-datatable-tbody > tr {
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+.p-datatable .p-datatable-tbody > tr > td {
+  border-color: var(--grid);
+}
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: var(--pine-bg);
+}
+.p-datatable .p-datatable-tbody > tr.p-highlight {
+  background: var(--pine-bg);
+  color: var(--ink);
+}
+.p-paginator {
+  background: transparent;
+  border: none;
+}
+.p-paginator .p-paginator-element {
+  border-radius: var(--radius);
+  color: var(--ink-muted);
+}
+.p-paginator .p-paginator-element.p-highlight {
+  background: var(--signal);
+  color: var(--signal-ink);
+}
+
+/* Tabs */
+.p-tabview-nav {
+  background: transparent;
+  border-color: var(--grid-strong);
+}
+.p-tabview-nav li .p-tabview-nav-link {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-muted);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 0;
+}
+.p-tabview-nav li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
+  border-color: var(--grid-strong);
+  color: var(--ink);
+}
+.p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  background: var(--surface);
+  border-color: var(--grid-strong) var(--grid-strong) var(--surface);
+  color: var(--signal);
+}
+.p-tabview-panels {
+  background: var(--surface);
+  border-radius: 0;
+}
+
+/* Dialog */
+.p-dialog {
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgba(29, 36, 32, 0.22);
+}
+.p-dialog .p-dialog-header {
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: 0;
+  padding: 1rem 1.25rem;
+}
+.p-dialog .p-dialog-header .p-dialog-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.p-dialog .p-dialog-header-icon {
+  color: var(--surface);
+}
+.p-dialog .p-dialog-header-icon:hover {
+  background: color-mix(in srgb, var(--surface) 15%, transparent);
+  color: var(--surface);
+}
+.p-dialog .p-dialog-content {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* Toast / confirm dialog */
+.p-toast-message {
+  border-radius: var(--radius);
+}
+.p-toast-message-success {
+  background: var(--pine-bg);
+  border-left: 4px solid var(--pine);
+  color: var(--ink);
+}
+.p-toast-message-error {
+  background: var(--alert-bg);
+  border-left: 4px solid var(--alert);
+  color: var(--ink);
+}
+.p-toast-message-warn {
+  background: color-mix(in srgb, var(--signal) 15%, var(--surface-raised));
+  border-left: 4px solid var(--signal);
+  color: var(--ink);
+}
+
+/* Ink-stamp status badge — reused across project/schedule/risk/news/timesheet statuses */
+.status-tag {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius);
+  font-family: var(--font-data);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--grid);
+  color: var(--ink);
+}

@@ -1,0 +1,113 @@
+.app-header {
+  background: var(--ink);
+  color: var(--surface);
+  border-bottom: 3px solid var(--signal);
+}
+
+.app-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 0.65rem 1.25rem;
+}
+
+.app-header__brand {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  line-height: 1.15;
+}
+
+.app-header__eyebrow {
+  color: color-mix(in srgb, var(--surface) 65%, transparent);
+}
+
+.app-header__title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--surface);
+}
+
+.app-nav {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.app-nav a {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--surface) 70%, transparent);
+  text-decoration: none;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid transparent;
+}
+
+.app-nav a:hover {
+  color: var(--surface);
+}
+
+.app-nav a.active {
+  color: var(--surface);
+  border-bottom-color: var(--signal);
+}
+
+.app-header__account {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.app-header__user {
+  font-size: 0.85rem;
+  color: var(--surface);
+}
+
+.app-header__role {
+  font-family: var(--font-data);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--surface) 65%, transparent);
+}
+
+.app-header__account .p-button-text {
+  color: color-mix(in srgb, var(--surface) 80%, transparent) !important;
+}
+.app-header__account .p-button-text:hover {
+  background: color-mix(in srgb, var(--surface) 12%, transparent) !important;
+  color: var(--surface) !important;
+}
+
+.app-header__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-data);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--surface) 65%, transparent);
+}
+
+.app-header__status-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--pine);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pine) 35%, transparent);
+}
+
+.app-header__status--down .app-header__status-dot {
+  background: var(--alert);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--alert) 35%, transparent);
+}

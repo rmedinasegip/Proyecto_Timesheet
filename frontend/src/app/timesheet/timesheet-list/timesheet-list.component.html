@@ -3,14 +3,18 @@
 
 <div class="timesheet-page">
   <div class="page-header">
-    <h2>Registro de timesheets</h2>
+    <div>
+      <span class="eyebrow">Gestión y control</span>
+      <h2 class="page-title">Registro de timesheets</h2>
+    </div>
     <button pButton type="button" label="+ Nuevo registro" icon="pi pi-plus" (click)="openNew()"></button>
   </div>
+  <div class="ruler-divider"></div>
 
   <div class="filters">
     <div class="field">
       <label><b>Consultor</b></label>
-      <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="filters.memberuser"
+      <p-dropdown [appendTo]="'body'" [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="filters.memberuser"
                   [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
@@ -23,12 +27,12 @@
     </div>
     <div class="field">
       <label><b>Proyecto</b></label>
-      <p-dropdown [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="filters.seqproject"
+      <p-dropdown [appendTo]="'body'" [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="filters.seqproject"
                   [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
       <label><b>Status</b></label>
-      <p-dropdown [options]="statusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="filters.status"
+      <p-dropdown [appendTo]="'body'" [options]="statusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="filters.status"
                   [showClear]="true" placeholder="Todos"></p-dropdown>
     </div>
     <div class="field filter-actions">
@@ -103,22 +107,22 @@
   <div class="form-grid">
     <div class="field">
       <label><b>Nombre consultor</b></label>
-      <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="form.memberuser"
+      <p-dropdown [appendTo]="'body'" [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="form.memberuser"
                   [ngModelOptions]="{standalone: true}" placeholder="Seleccione consultor" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
       <label><b>Empresa</b></label>
-      <p-dropdown [options]="companies" optionLabel="name" optionValue="id.code" [(ngModel)]="form.codecompanyconsultant"
+      <p-dropdown [appendTo]="'body'" [options]="companies" optionLabel="name" optionValue="id.code" [(ngModel)]="form.codecompanyconsultant"
                   [ngModelOptions]="{standalone: true}" placeholder="Seleccione empresa"></p-dropdown>
     </div>
     <div class="field">
       <label><b>Cliente</b></label>
-      <p-dropdown [options]="customers" optionLabel="name" optionValue="code" [(ngModel)]="form.codecustomer"
+      <p-dropdown [appendTo]="'body'" [options]="customers" optionLabel="name" optionValue="code" [(ngModel)]="form.codecustomer"
                   [ngModelOptions]="{standalone: true}" placeholder="Seleccione cliente" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
       <label><b>Proyecto</b></label>
-      <p-dropdown [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="form.seqproject"
+      <p-dropdown [appendTo]="'body'" [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="form.seqproject"
                   [ngModelOptions]="{standalone: true}" placeholder="(vacío si es incidencia)" [showClear]="true" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
@@ -131,17 +135,17 @@
     </div>
     <div class="field">
       <label><b>Sistema</b></label>
-      <p-dropdown [options]="systemItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.system"
+      <p-dropdown [appendTo]="'body'" [options]="systemItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.system"
                   [ngModelOptions]="{standalone: true}" placeholder="Seleccione sistema"></p-dropdown>
     </div>
     <div class="field">
       <label><b>Módulo</b></label>
-      <p-dropdown [options]="moduleItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.module"
+      <p-dropdown [appendTo]="'body'" [options]="moduleItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.module"
                   [ngModelOptions]="{standalone: true}" placeholder="Seleccione módulo" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
       <label><b>Tipo actividad</b></label>
-      <p-dropdown [options]="activityTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.activitytype"
+      <p-dropdown [appendTo]="'body'" [options]="activityTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.activitytype"
                   [ngModelOptions]="{standalone: true}" placeholder="Seleccione tipo"></p-dropdown>
     </div>
     <div class="field full">

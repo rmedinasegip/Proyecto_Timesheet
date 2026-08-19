@@ -21,12 +21,12 @@
         <div class="field full"><label><b>Descripción extendida</b></label>
           <textarea pInputTextarea [(ngModel)]="form.projectDescription" rows="3"></textarea></div>
         <div class="field"><label><b>Cliente</b></label>
-          <p-dropdown [options]="customers" optionLabel="name" optionValue="code" [(ngModel)]="form.codecustomer"
+          <p-dropdown [appendTo]="'body'" [options]="customers" optionLabel="name" optionValue="code" [(ngModel)]="form.codecustomer"
                       placeholder="Seleccione cliente" [filter]="true"></p-dropdown></div>
         <div class="field"><label><b>Fecha de solicitud</b></label>
-          <p-calendar [(ngModel)]="form.requestDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.requestDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Código Project Manager</b></label>
-          <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="form.codeuserPm"
+          <p-dropdown [appendTo]="'body'" [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="form.codeuserPm"
                       placeholder="Seleccione PM" [filter]="true"></p-dropdown></div>
       </div>
     </p-tabPanel>
@@ -37,13 +37,13 @@
         <div class="field"><label><b>Duración del proyecto (días)</b></label>
           <p-inputNumber [(ngModel)]="form.projectDuration"></p-inputNumber></div>
         <div class="field"><label><b>Fecha inicio base</b></label>
-          <p-calendar [(ngModel)]="form.baseStartDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.baseStartDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Fecha fin base</b></label>
-          <p-calendar [(ngModel)]="form.baseEndDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.baseEndDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Fecha inicio planificación</b></label>
-          <p-calendar [(ngModel)]="form.plannedStartDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.plannedStartDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Fecha fin planificación</b></label>
-          <p-calendar [(ngModel)]="form.plannedEndDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.plannedEndDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
       </div>
     </p-tabPanel>
 
@@ -51,11 +51,11 @@
     <p-tabPanel header="Ejecución real">
       <div class="form-grid">
         <div class="field"><label><b>Fecha inicio real</b></label>
-          <p-calendar [(ngModel)]="form.realStartDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.realStartDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Fecha fin real</b></label>
-          <p-calendar [(ngModel)]="form.realEndDate" dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.realEndDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Estado</b></label>
-          <p-dropdown [options]="projectStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.status"
+          <p-dropdown [appendTo]="'body'" [options]="projectStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.status"
                       [ngModelOptions]="{standalone: true}" placeholder="Seleccione estado"></p-dropdown>
         </div>
       </div>
@@ -70,12 +70,12 @@
       <p class="hint" *ngIf="!currentSeq">Guarde el proyecto primero para gestionar el equipo.</p>
       <ng-container *ngIf="currentSeq">
         <div class="inline-form">
-          <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="newTeamMember.memberuser"
+          <p-dropdown [appendTo]="'body'" [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="newTeamMember.memberuser"
                       [ngModelOptions]="{standalone: true}" placeholder="Consultor" [filter]="true"></p-dropdown>
-          <p-dropdown [options]="projectRolItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newTeamMember.projectrol"
+          <p-dropdown [appendTo]="'body'" [options]="projectRolItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newTeamMember.projectrol"
                       [ngModelOptions]="{standalone: true}" placeholder="Rol"></p-dropdown>
           <p-calendar [(ngModel)]="newTeamMember.assignmentdate" [ngModelOptions]="{standalone: true}"
-                      dateFormat="yy-mm-dd" dataType="string" placeholder="Fecha asignación" [showIcon]="true"></p-calendar>
+                      dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" placeholder="Fecha asignación" [showIcon]="true"></p-calendar>
           <button pButton type="button" label="Agregar" icon="pi pi-plus" (click)="addTeamMember()"></button>
         </div>
         <p-table [value]="team" styleClass="p-datatable-sm">
@@ -165,7 +165,7 @@
               </td>
               <ng-container *ngIf="!row.padre">
                 <td>
-                  <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="editingScheduleForm.memberuser"
+                  <p-dropdown [appendTo]="'body'" [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="editingScheduleForm.memberuser"
                               [ngModelOptions]="{standalone: true}" placeholder="Responsable" [filter]="true"></p-dropdown>
                 </td>
                 <td><p-inputNumber [(ngModel)]="editingScheduleForm.basedays" [ngModelOptions]="{standalone: true}"></p-inputNumber></td>
@@ -173,9 +173,9 @@
                 <td>—</td>
                 <td>
                   <p-calendar [(ngModel)]="editingScheduleForm.baseStartDate" [ngModelOptions]="{standalone: true}"
-                              dateFormat="yy-mm-dd" dataType="string"></p-calendar>
+                              dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"></p-calendar>
                   <p-calendar [(ngModel)]="editingScheduleForm.baseEndDate" [ngModelOptions]="{standalone: true}"
-                              dateFormat="yy-mm-dd" dataType="string"></p-calendar>
+                              dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"></p-calendar>
                 </td>
               </ng-container>
               <td [attr.colspan]="row.padre ? 5 : 1">
@@ -193,9 +193,9 @@
     <p-tabPanel header="Riesgos" [disabled]="!currentSeq">
       <ng-container *ngIf="currentSeq">
         <div class="inline-form wrap">
-          <p-calendar [(ngModel)]="newRisk.riskdate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"
+          <p-calendar [(ngModel)]="newRisk.riskdate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"
                       placeholder="Fecha identificación" [showIcon]="true"></p-calendar>
-          <p-dropdown [options]="riskTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newRisk.risktypeimpact"
+          <p-dropdown [appendTo]="'body'" [options]="riskTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newRisk.risktypeimpact"
                       [ngModelOptions]="{standalone: true}" placeholder="Tipo de impacto"></p-dropdown>
           <input pInputText [(ngModel)]="newRisk.riskdescimpact" [ngModelOptions]="{standalone: true}" placeholder="Descripción del impacto" />
           <input pInputText [(ngModel)]="newRisk.personincharge" [ngModelOptions]="{standalone: true}" placeholder="Responsable" />
@@ -224,9 +224,9 @@
               </td>
             </tr>
             <tr *ngIf="editingRiskSeq === row.seqrisk">
-              <td><p-calendar [(ngModel)]="editingRiskForm.riskdate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"></p-calendar></td>
+              <td><p-calendar [(ngModel)]="editingRiskForm.riskdate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"></p-calendar></td>
               <td>
-                <p-dropdown [options]="riskTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingRiskForm.risktypeimpact"
+                <p-dropdown [appendTo]="'body'" [options]="riskTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingRiskForm.risktypeimpact"
                             [ngModelOptions]="{standalone: true}"></p-dropdown>
               </td>
               <td><input pInputText [(ngModel)]="editingRiskForm.riskdescimpact" [ngModelOptions]="{standalone: true}" /></td>
@@ -235,7 +235,7 @@
               <td><input pInputText [(ngModel)]="editingRiskForm.solution" [ngModelOptions]="{standalone: true}" /></td>
               <td><p-inputNumber [(ngModel)]="editingRiskForm.probabilityperc" [ngModelOptions]="{standalone: true}" suffix="%"></p-inputNumber></td>
               <td>
-                <p-dropdown [options]="riskStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingRiskForm.riskstatus"
+                <p-dropdown [appendTo]="'body'" [options]="riskStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingRiskForm.riskstatus"
                             [ngModelOptions]="{standalone: true}"></p-dropdown>
               </td>
               <td>
@@ -253,9 +253,9 @@
     <p-tabPanel header="Novedades" [disabled]="!currentSeq">
       <ng-container *ngIf="currentSeq">
         <div class="inline-form wrap">
-          <p-calendar [(ngModel)]="newNews.datenewarrival" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"
+          <p-calendar [(ngModel)]="newNews.datenewarrival" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"
                       placeholder="Fecha novedad" [showIcon]="true"></p-calendar>
-          <p-dropdown [options]="newsTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newNews.newstypeimpact"
+          <p-dropdown [appendTo]="'body'" [options]="newsTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newNews.newstypeimpact"
                       [ngModelOptions]="{standalone: true}" placeholder="Tipo de impacto"></p-dropdown>
           <input pInputText [(ngModel)]="newNews.descriptionnews" [ngModelOptions]="{standalone: true}" placeholder="Descripción" />
           <input pInputText [(ngModel)]="newNews.personreporting" [ngModelOptions]="{standalone: true}" placeholder="Persona que reporta" />
@@ -286,9 +286,9 @@
               </td>
             </tr>
             <tr *ngIf="editingNewsSeq === row.seqNews">
-              <td><p-calendar [(ngModel)]="editingNewsForm.datenewarrival" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"></p-calendar></td>
+              <td><p-calendar [(ngModel)]="editingNewsForm.datenewarrival" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"></p-calendar></td>
               <td>
-                <p-dropdown [options]="newsTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingNewsForm.newstypeimpact"
+                <p-dropdown [appendTo]="'body'" [options]="newsTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingNewsForm.newstypeimpact"
                             [ngModelOptions]="{standalone: true}"></p-dropdown>
               </td>
               <td><input pInputText [(ngModel)]="editingNewsForm.descriptionnews" [ngModelOptions]="{standalone: true}" /></td>
@@ -298,7 +298,7 @@
               <td><input pInputText [(ngModel)]="editingNewsForm.company" [ngModelOptions]="{standalone: true}" /></td>
               <td><input pInputText [(ngModel)]="editingNewsForm.solution" [ngModelOptions]="{standalone: true}" /></td>
               <td>
-                <p-dropdown [options]="newsStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingNewsForm.newstatus"
+                <p-dropdown [appendTo]="'body'" [options]="newsStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="editingNewsForm.newstatus"
                             [ngModelOptions]="{standalone: true}"></p-dropdown>
               </td>
               <td>
@@ -332,13 +332,13 @@
   <div class="form-grid one-col">
     <div class="field">
       <label><b>Relación jerárquica</b></label>
-      <p-dropdown [options]="[{label:'Padre', value:'PADRE'},{label:'Hermano', value:'HERMANO'},{label:'Hijo', value:'HIJO'}]"
+      <p-dropdown [appendTo]="'body'" [options]="[{label:'Padre', value:'PADRE'},{label:'Hermano', value:'HERMANO'},{label:'Hijo', value:'HIJO'}]"
                   optionLabel="label" optionValue="value" [(ngModel)]="scheduleForm.hierarchyType"
                   [ngModelOptions]="{standalone: true}"></p-dropdown>
     </div>
     <div class="field" *ngIf="scheduleForm.hierarchyType !== 'PADRE'">
       <label><b>Actividad de referencia</b></label>
-      <p-dropdown [options]="schedule" optionLabel="shortactivitydesc" optionValue="seqschedule"
+      <p-dropdown [appendTo]="'body'" [options]="schedule" optionLabel="shortactivitydesc" optionValue="seqschedule"
                   [(ngModel)]="scheduleForm.referenceSeqschedule" [ngModelOptions]="{standalone: true}"
                   placeholder="Seleccione actividad"></p-dropdown>
     </div>
@@ -353,7 +353,7 @@
     <ng-container *ngIf="scheduleForm.hierarchyType === 'HIJO'">
       <div class="field">
         <label><b>Responsable</b></label>
-        <p-dropdown [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="scheduleForm.memberuser"
+        <p-dropdown [appendTo]="'body'" [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="scheduleForm.memberuser"
                     [ngModelOptions]="{standalone: true}" [filter]="true"></p-dropdown>
       </div>
       <div class="field">
@@ -366,11 +366,11 @@
       </div>
       <div class="field">
         <label><b>Fecha inicio base</b></label>
-        <p-calendar [(ngModel)]="scheduleForm.baseStartDate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"></p-calendar>
+        <p-calendar [(ngModel)]="scheduleForm.baseStartDate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"></p-calendar>
       </div>
       <div class="field">
         <label><b>Fecha fin base</b></label>
-        <p-calendar [(ngModel)]="scheduleForm.baseEndDate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string"></p-calendar>
+        <p-calendar [(ngModel)]="scheduleForm.baseEndDate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"></p-calendar>
       </div>
     </ng-container>
   </div>
@@ -384,7 +384,7 @@
     <div class="field">
       <label><b>Fecha de corte</b></label>
       <p-calendar [(ngModel)]="progressForm.lastcutoffdate" [ngModelOptions]="{standalone: true}"
-                  dateFormat="yy-mm-dd" dataType="string" [showIcon]="true"></p-calendar>
+                  dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar>
     </div>
     <div class="field">
       <label><b>% Avance esperado</b></label>

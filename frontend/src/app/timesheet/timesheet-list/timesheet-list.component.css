@@ -20,8 +20,8 @@
   align-items: flex-end;
   margin-bottom: 1rem;
   padding: 0.75rem;
-  background: #f4f6f8;
-  border-radius: 4px;
+  background: var(--surface);
+  border-radius: var(--radius);
 }
 
 .filters .field {
@@ -38,8 +38,8 @@
 
 .native-date {
   padding: 0.4rem 0.5rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
+  border: 1px solid var(--grid-strong);
+  border-radius: var(--radius);
 }
 
 .totals {
@@ -76,6 +76,6 @@
   justify-content: flex-end;
   gap: 0.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--grid);
   margin-top: 1rem;
 }

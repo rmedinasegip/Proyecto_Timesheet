@@ -1,14 +1,23 @@
-<header style="padding: 0.5rem 1rem; border-bottom: 1px solid #e0e0e0; font-family: sans-serif; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-  <h1 style="margin: 0; font-size: 1.15rem;">{{ title }}</h1>
-  <nav style="display: flex; gap: 1rem; flex-wrap: wrap;" *ngIf="currentUser">
-    <a routerLink="/projects" routerLinkActive="active-link">Proyectos</a>
-    <a routerLink="/progress" routerLinkActive="active-link">Avance</a>
-    <a routerLink="/timesheets" routerLinkActive="active-link">Timesheets</a>
-  </nav>
-  <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-    <span *ngIf="currentUser">{{ currentUser.name }} ({{ currentUser.roleName }})</span>
-    <button *ngIf="currentUser" pButton type="button" label="Cerrar sesión" class="p-button-text p-button-sm" (click)="logout()"></button>
-    <small>Backend: {{ backendStatus }}</small>
+<header class="app-header">
+  <div class="app-header__row">
+    <a routerLink="/" class="app-header__brand">
+      <span class="eyebrow app-header__eyebrow">Gestión y control de proyectos</span>
+      <span class="app-header__title">TimeSheets</span>
+    </a>
+
+    <nav class="app-nav" *ngIf="currentUser">
+      <a routerLink="/projects" routerLinkActive="active">Proyectos</a>
+      <a routerLink="/progress" routerLinkActive="active">Avance</a>
+      <a routerLink="/timesheets" routerLinkActive="active">Timesheets</a>
+    </nav>
+
+    <div class="app-header__account">
+      <span *ngIf="currentUser" class="app-header__user">{{ currentUser.name }} <span class="app-header__role">{{ currentUser.roleName }}</span></span>
+      <button *ngIf="currentUser" pButton type="button" label="Cerrar sesión" class="p-button-text p-button-sm" (click)="logout()"></button>
+      <span class="app-header__status" [class.app-header__status--down]="backendStatus !== 'ok'">
+        <span class="app-header__status-dot" aria-hidden="true"></span>{{ backendStatus }}
+      </span>
+    </div>
   </div>
 </header>
 <router-outlet></router-outlet>

@@ -3,9 +3,13 @@
 
 <div class="project-list-page">
   <div class="page-header">
-    <h2>Proyectos</h2>
+    <div>
+      <span class="eyebrow">Gestión y control</span>
+      <h2 class="page-title">Proyectos</h2>
+    </div>
     <button pButton type="button" label="+ Nuevo Proyecto" icon="pi pi-plus" (click)="openNew()"></button>
   </div>
+  <div class="ruler-divider"></div>
 
   <p-table [value]="projects" [loading]="loading" [paginator]="true" [rows]="10"
            responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-striped">
