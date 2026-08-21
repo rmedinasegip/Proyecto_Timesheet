@@ -1,0 +1,132 @@
+<p-toast></p-toast>
+
+<div class="weekly-progress-page">
+  <div class="page-header">
+    <div>
+      <span class="eyebrow">Gestión y control</span>
+      <h2 class="page-title">Avance semanal de actividades</h2>
+    </div>
+  </div>
+  <div class="ruler-divider"></div>
+
+  <div class="filters">
+    <div class="field">
+      <label><b>Semana</b></label>
+      <p-calendar [(ngModel)]="weekAnchor" dateFormat="yy-mm-dd" [appendTo]="'body'" [showIcon]="true"
+                  [ngModelOptions]="{standalone: true}" (onSelect)="onWeekAnchorChange()"></p-calendar>
+      <span class="week-range data">{{ weekLabel }}</span>
+    </div>
+    <div class="field" *ngIf="canReview">
+      <label><b>Consultor</b></label>
+      <p-dropdown [appendTo]="'body'" [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="memberuserFilter"
+                  [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Proyecto</b></label>
+      <p-dropdown [appendTo]="'body'" [options]="projects" optionLabel="projectName" optionValue="seq" [(ngModel)]="seqprojectFilter"
+                  [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
+      <label><b>Estado</b></label>
+      <p-dropdown [appendTo]="'body'" [options]="statusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="statusFilter"
+                  [showClear]="true" placeholder="Todos"></p-dropdown>
+    </div>
+    <div class="field filter-actions">
+      <button pButton type="button" label="Buscar" icon="pi pi-search" (click)="reload()"></button>
+      <button pButton type="button" label="Limpiar" class="p-button-text" (click)="clearFilters()"></button>
+    </div>
+  </div>
+
+  <div class="table-scroll">
+    <p-table [value]="activities" [loading]="loading" [paginator]="true" [rows]="10"
+             responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Proyecto</th>
+          <th>Actividad</th>
+          <th *ngIf="canReview">Consultor</th>
+          <th>Avance actual</th>
+          <th class="day-col" *ngFor="let d of weekdayLabels">{{ d }}</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr *ngIf="editingSeqschedule !== row.seqschedule">
+          <td>{{ row.projectName }}</td>
+          <td>{{ row.shortactivitydesc }}</td>
+          <td *ngIf="canReview">{{ row.memberName }}</td>
+          <td><app-gauge [value]="row.currentAdvancePerc" [min]="0" [max]="100"></app-gauge></td>
+          <td class="day-col data">{{ row.day1Perc ?? '—' }}</td>
+          <td class="day-col data">{{ row.day2Perc ?? '—' }}</td>
+          <td class="day-col data">{{ row.day3Perc ?? '—' }}</td>
+          <td class="day-col data">{{ row.day4Perc ?? '—' }}</td>
+          <td class="day-col data">{{ row.day5Perc ?? '—' }}</td>
+          <td class="day-col data">{{ row.day6Perc ?? '—' }}</td>
+          <td class="day-col data">{{ row.day7Perc ?? '—' }}</td>
+          <td>
+            <span class="status-tag" *ngIf="row.statusName">{{ row.statusName }}</span>
+            <span class="status-tag pending" *ngIf="!row.statusName">Pendiente</span>
+          </td>
+          <td class="actions-cell">
+            <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
+                    *ngIf="isOwnRow(row)" (click)="startEdit(row)" pTooltip="Registrar avance"></button>
+            <ng-container *ngIf="canReview && row.status === 'REG'">
+              <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-success p-button-sm"
+                      (click)="approve(row)" pTooltip="Aprobar"></button>
+              <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-danger p-button-sm"
+                      (click)="reject(row)" pTooltip="Rechazar"></button>
+            </ng-container>
+          </td>
+        </tr>
+        <tr *ngIf="editingSeqschedule === row.seqschedule">
+          <td>{{ row.projectName }}</td>
+          <td>{{ row.shortactivitydesc }}</td>
+          <td *ngIf="canReview">{{ row.memberName }}</td>
+          <td><app-gauge [value]="row.currentAdvancePerc" [min]="0" [max]="100"></app-gauge></td>
+          <td class="day-col">
+            <p-inputNumber [(ngModel)]="editForm.day1Perc" [ngModelOptions]="{standalone: true}"
+                            [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
+          </td>
+          <td class="day-col">
+            <p-inputNumber [(ngModel)]="editForm.day2Perc" [ngModelOptions]="{standalone: true}"
+                            [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
+          </td>
+          <td class="day-col">
+            <p-inputNumber [(ngModel)]="editForm.day3Perc" [ngModelOptions]="{standalone: true}"
+                            [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
+          </td>
+          <td class="day-col">
+            <p-inputNumber [(ngModel)]="editForm.day4Perc" [ngModelOptions]="{standalone: true}"
+                            [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
+          </td>
+          <td class="day-col">
+            <p-inputNumber [(ngModel)]="editForm.day5Perc" [ngModelOptions]="{standalone: true}"
+                            [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
+          </td>
+          <td class="day-col">
+            <p-inputNumber [(ngModel)]="editForm.day6Perc" [ngModelOptions]="{standalone: true}"
+                            [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
+          </td>
+          <td class="day-col">
+            <p-inputNumber [(ngModel)]="editForm.day7Perc" [ngModelOptions]="{standalone: true}"
+                            [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
+          </td>
+          <td>
+            <span class="status-tag" *ngIf="row.statusName">{{ row.statusName }}</span>
+            <span class="status-tag pending" *ngIf="!row.statusName">Pendiente</span>
+          </td>
+          <td class="actions-cell">
+            <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-sm"
+                    (click)="saveEdit(row)" pTooltip="Guardar"></button>
+            <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm"
+                    (click)="cancelEdit()" pTooltip="Cancelar"></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td [attr.colspan]="canReview ? 12 : 11">No hay actividades asignadas para la semana seleccionada.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

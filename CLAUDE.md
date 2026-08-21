@@ -1,7 +1,9 @@
 # CLAUDE.md
 
-Guía para Claude Code al trabajar en este repositorio. El plan de arquitectura
-completo y su historial de decisiones vive en
+Guía para Claude Code al trabajar en este repositorio. Mismo contenido que
+`AGENTS.md` — se mantienen ambos archivos sincronizados porque distintas
+herramientas leen uno u otro por convención. El plan de arquitectura completo
+y su historial de decisiones vive en
 `C:\Users\medin\.claude\plans\crear-un-plan-de-purrfect-spindle.md` — este
 archivo resume lo operativo para el día a día.
 
@@ -56,27 +58,32 @@ aplica manualmente contra el Postgres 18 local con `psql`
 `.claude/launch.json` tiene las dos entradas de dev server (`backend`,
 `frontend`) para el Browser pane.
 
+`psql` necesita `PGPASSWORD=postgres` en el entorno (o `.pgpass`) — sin eso
+queda colgado esperando la contraseña por stdin en vez de fallar.
+
 ## Estructura del monorepo
 
 ```
 backend/src/main/java/com/llacsaa/timesheet/
-  catalog/    TINS_CATALOGUE, TINS_CATALOGUEITEM
-  master/     tins_company, tins_customer, tins_user, tins_person (maestros JORUPE)
-  project/    tprj_project, tprj_proj_team + historial (snapshot)
-  schedule/   tprj_project_schedule (actividades/fases) + historial
-  timesheet/  tprj_project_timesheet (registro diario de horas)
-  risk/       tprj_project_risk + historial
-  news/       tprj_project_news + historial
-  change/     tprj_project_change ("Cambios Aprobados") + historial
-  report/     ProjectProgressReportService — reporte de avance (agregación en vivo, sin tabla propia) + export a Excel
-  auth/       login JWT (cookie httpOnly), roles CON/AUT, AuthContext (usuario actual por request)
-  common/     utilidades transversales (PilotContext: codeinstance/codecompany fijos)
+  catalog/        TINS_CATALOGUE, TINS_CATALOGUEITEM
+  master/         tins_company, tins_customer, tins_user, tins_person (maestros JORUPE)
+  project/        tprj_project, tprj_proj_team + historial (snapshot)
+  schedule/       tprj_project_schedule (actividades/fases) + historial
+  timesheet/      tprj_project_timesheet (registro diario de horas)
+  risk/           tprj_project_risk + historial
+  news/           tprj_project_news + historial
+  change/         tprj_project_change ("Cambios Aprobados") + historial
+  report/         ProjectProgressReportService — reporte de avance (agregación en vivo, sin tabla propia) + export a Excel
+  auth/           login JWT (cookie httpOnly), roles CON/AUT, AuthContext (usuario actual por request)
+  weeklyprogress/ avance semanal de Schedules por consultor (tprj_project_schedulets -> tprj_projectts_week -> tprj_projectts_week_detail)
+  common/         utilidades transversales (PilotContext: codeinstance/codecompany fijos)
 
 frontend/src/app/
-  projects/   módulo Proyecto: grilla + modal de 10 pestañas
-  progress/   avance de proyecto + reporte (ProgressReportComponent, ruta /progress)
-  timesheet/  registro diario del consultor
-  auth/       login (LoginComponent, ruta /login), AuthService, AuthGuard, AuthInterceptor
+  projects/        módulo Proyecto: grilla + modal de 10 pestañas
+  progress/        avance de proyecto + reporte (ProgressReportComponent, ruta /progress)
+  timesheet/       registro diario del consultor
+  weekly-progress/ avance semanal de Schedules por consultor (ruta /weekly-progress)
+  auth/            login (LoginComponent, ruta /login), AuthService, AuthGuard, AuthInterceptor
 ```
 
 No hay `packages/shared` como en el proyecto vecino Next.js — este stack no
@@ -102,6 +109,19 @@ o clases en `backend`, interfaces TypeScript en `frontend`).
   contrario.
 - `codeinstance`/`codecompany` se resuelven desde configuración fija en este
   piloto (no hay selector de instancia en ningún mockup).
+- Filtros opcionales en endpoints de búsqueda: usar JPA Specifications (cada
+  filtro devuelve `null` si el parámetro no vino), nunca JPQL con
+  `(:param IS NULL OR ...)` — ese patrón rompe con Postgres/JDBC cuando el
+  parámetro solo aparece dentro de una comparación `IS NULL`.
+- Campos de entidad con un dígito seguido de mayúscula (ej. `day1Perc`) NO
+  quedan mapeados por la estrategia de nombres por defecto de Hibernate a la
+  columna con guión bajo esperada (`day1_perc` → generaría `day1perc`) —
+  usar `@Column(name = "...")` explícito en esos casos.
+- Cuidado con el operador ternario de Java mezclando `Long`/`long`: si una
+  rama es un `Long` que puede ser `null` y la otra es un `long` primitivo
+  (p. ej. el resultado de `AuthContext.currentUserCode()`), Java desempaqueta
+  la rama `Long` para unificar tipos y lanza NPE si es `null` — usar
+  `if`/`else` en vez de ternario en esos casos.
 
 ## Módulos funcionales (ver plan para reglas de negocio detalladas)
 
@@ -116,6 +136,13 @@ o clases en `backend`, interfaces TypeScript en `frontend`).
    (`tprj_project_timesheet`), reconstruida a partir de la hoja "Registro
    diario" del Excel — no tenía mockup ni tabla definida en la especificación
    original.
+4. **Avance semanal de Schedules por consultor** — cada consultor registra,
+   semana a semana, el % de avance de sus actividades ("Hijo") del Schedule,
+   en la misma grilla que las lista (edición en línea, sin diálogo aparte).
+   Alimenta `tprj_project_schedule.advrealperc`/`advrealdays`/
+   `datestamentday`. Flujo de aprobación Registrado→Aprobado/Rechazado igual
+   que Timesheets; acceso autoservicio estricto (un consultor solo ve/edita
+   lo propio, forzado en el servidor).
 
 ## Reglas de UI/UX transversales
 
@@ -194,6 +221,38 @@ o clases en `backend`, interfaces TypeScript en `frontend`).
   navegador (login, guard, logout, persistencia de sesión tras recargar,
   descarga de Excel).
 
+Con Fase 5 completa, el roadmap del plan original queda cerrado. Fases
+posteriores (6+) son módulos nuevos pedidos fuera de ese roadmap original.
+
+- ✅ **Fase 6** (avance semanal de Schedules por consultor) — módulo nuevo,
+  fuera del roadmap original, a partir de
+  `Especificación de Proyecto_Control_Proyectos_TimeSheets_2.docx`: cada
+  consultor registra semana a semana el % de avance de sus actividades
+  ("Hijo") del Schedule. Nuevas tablas `tprj_project_schedulets`,
+  `tprj_projectts_week` (con flujo Registrado→Aprobado/Rechazado, catálogo
+  `PRJ_TSWEEKSTATUSCAT`) y `tprj_projectts_week_detail` (día1-7, snapshot
+  acumulado por día) + sus 3 `_his`
+  (`backend/sql/V7__schedule_weekly_progress.sql`), paquete backend
+  `weeklyprogress/` (`WeeklyProgressService`/`Controller`, endpoints
+  `/api/schedule-progress/*`). Al guardar una semana, el último día con
+  valor se propaga como nuevo `tprj_project_schedule.advrealperc`/
+  `advrealdays`/`datestamentday`, historizado con el mismo patrón de
+  `ScheduleService` — campos que existían desde la Fase 2 pero que ningún
+  módulo alimentaba todavía. Acceso autoservicio estricto: un `CON` solo
+  ve/edita sus propias actividades (forzado en el servidor, no solo en el
+  filtro del cliente — confirmado con pruebas de API directas); un `AUT`
+  ve todos los consultores y aprueba/rechaza semanas, pero no puede
+  escribir porcentajes por otro (403). Pantalla Angular en
+  `frontend/src/app/weekly-progress/` (ruta `/weekly-progress`), grilla con
+  edición en línea (mismo patrón de la pestaña "Schedule Proyecto": toggle
+  lápiz→inputs→check/X en la misma fila, sin diálogo aparte). Verificado
+  end-to-end vía API real (curl/fetch) y navegador: registro semanal como
+  `CON`, avance reflejado en `tprj_project_schedule` y en la pestaña Schedule
+  del modal de Proyecto, aprobación como `AUT`, y los dos límites de
+  seguridad (alcance forzado en GET, 403 en PUT sobre actividad ajena)
+  confirmados con requests directos. Los dos bugs de Hibernate/ternario que
+  aparecieron durante esta fase ya quedaron generalizados como convención en
+  la sección "Convenciones del modelo de datos" de arriba.
+
 Cada fase se implementa y valida (build + prueba manual en navegador) antes
-de pasar a la siguiente. Con Fase 5 completa, el roadmap del plan original
-queda cerrado.
+de pasar a la siguiente.

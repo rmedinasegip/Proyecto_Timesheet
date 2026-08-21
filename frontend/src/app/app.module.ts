@@ -23,6 +23,7 @@ import { ProjectListComponent } from './projects/project-list/project-list.compo
 import { ProjectFormComponent } from './projects/project-form/project-form.component';
 import { TimesheetListComponent } from './timesheet/timesheet-list/timesheet-list.component';
 import { ProgressReportComponent } from './progress/progress-report/progress-report.component';
+import { WeeklyProgressListComponent } from './weekly-progress/weekly-progress-list/weekly-progress-list.component';
 import { LoginComponent } from './auth/login/login.component';
 import { AuthInterceptor } from './auth/interceptors/auth.interceptor';
 import { GaugeComponent } from './shared/gauge/gauge.component';
@@ -34,6 +35,7 @@ import { GaugeComponent } from './shared/gauge/gauge.component';
     ProjectFormComponent,
     TimesheetListComponent,
     ProgressReportComponent,
+    WeeklyProgressListComponent,
     LoginComponent,
     GaugeComponent
   ],

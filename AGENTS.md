@@ -1,6 +1,9 @@
+# AGENTS.md
 
-Guía para Claude Code al trabajar en este repositorio. El plan de arquitectura
-completo y su historial de decisiones vive en
+Guía para agentes de IA (Claude Code, Codex, u otros) al trabajar en este
+repositorio. Mismo contenido que `CLAUDE.md` — se mantienen ambos archivos
+sincronizados porque distintas herramientas leen uno u otro por convención.
+El plan de arquitectura completo y su historial de decisiones vive en
 `C:\Users\medin\.claude\plans\crear-un-plan-de-purrfect-spindle.md` — este
 archivo resume lo operativo para el día a día.
 
@@ -52,6 +55,9 @@ aplica manualmente contra el Postgres 18 local con `psql`
 "/d/PostgreSQL/18/bin/psql.exe" -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 -f backend/sql/V1__catalogs_and_masters.sql
 ```
 
+`psql` necesita `PGPASSWORD=postgres` en el entorno (o `.pgpass`) — sin eso
+queda colgado esperando la contraseña por stdin en vez de fallar.
+
 `.claude/launch.json` tiene las dos entradas de dev server (`backend`,
 `frontend`) para el Browser pane.
 
@@ -59,23 +65,25 @@ aplica manualmente contra el Postgres 18 local con `psql`
 
 ```
 backend/src/main/java/com/llacsaa/timesheet/
-  catalog/    TINS_CATALOGUE, TINS_CATALOGUEITEM
-  master/     tins_company, tins_customer, tins_user, tins_person (maestros JORUPE)
-  project/    tprj_project, tprj_proj_team + historial (snapshot)
-  schedule/   tprj_project_schedule (actividades/fases) + historial
-  timesheet/  tprj_project_timesheet (registro diario de horas)
-  risk/       tprj_project_risk + historial
-  news/       tprj_project_news + historial
-  change/     tprj_project_change ("Cambios Aprobados") + historial
-  report/     ProjectProgressReportService — reporte de avance (agregación en vivo, sin tabla propia) + export a Excel
-  auth/       login JWT (cookie httpOnly), roles CON/AUT, AuthContext (usuario actual por request)
-  common/     utilidades transversales (PilotContext: codeinstance/codecompany fijos)
+  catalog/        TINS_CATALOGUE, TINS_CATALOGUEITEM
+  master/         tins_company, tins_customer, tins_user, tins_person (maestros JORUPE)
+  project/        tprj_project, tprj_proj_team + historial (snapshot)
+  schedule/       tprj_project_schedule (actividades/fases) + historial
+  timesheet/      tprj_project_timesheet (registro diario de horas)
+  risk/           tprj_project_risk + historial
+  news/           tprj_project_news + historial
+  change/         tprj_project_change ("Cambios Aprobados") + historial
+  report/         ProjectProgressReportService — reporte de avance (agregación en vivo, sin tabla propia) + export a Excel
+  auth/           login JWT (cookie httpOnly), roles CON/AUT, AuthContext (usuario actual por request)
+  weeklyprogress/ avance semanal de Schedules por consultor (tprj_project_schedulets -> tprj_projectts_week -> tprj_projectts_week_detail)
+  common/         utilidades transversales (PilotContext: codeinstance/codecompany fijos)
 
 frontend/src/app/
-  projects/   módulo Proyecto: grilla + modal de 10 pestañas
-  progress/   avance de proyecto + reporte (ProgressReportComponent, ruta /progress)
-  timesheet/  registro diario del consultor
-  auth/       login (LoginComponent, ruta /login), AuthService, AuthGuard, AuthInterceptor
+  projects/        módulo Proyecto: grilla + modal de 10 pestañas
+  progress/        avance de proyecto + reporte (ProgressReportComponent, ruta /progress)
+  timesheet/       registro diario del consultor
+  weekly-progress/ avance semanal de Schedules por consultor (ruta /weekly-progress)
+  auth/            login (LoginComponent, ruta /login), AuthService, AuthGuard, AuthInterceptor
 ```
 
 No hay `packages/shared` como en el proyecto vecino Next.js — este stack no
@@ -90,10 +98,9 @@ o clases en `backend`, interfaces TypeScript en `frontend`).
   multi-instancia/multi-compañía) y auditoría estándar (`usercreate`,
   `userlastmodify`, `datecreate`, `datemodify`).
 - **Histórico = snapshot de fila completa**, no log a nivel de campo: cada
-  `INSERT`/`UPDATE` en `tprj_project`, `tprj_proj_team`,
-  `tprj_project_schedule`, `tprj_project_risk` o `tprj_project_news` escribe
-  una copia íntegra en su tabla `_his` correspondiente
-  (`seq_his` PK + `actiondml` `NEW`/`UPDATE` + `datechange`/`userchange`).
+  `INSERT`/`UPDATE` en las tablas de negocio principales escribe una copia
+  íntegra en su tabla `_his` correspondiente
+  (`seq_his` PK + `actiondml` `NEW`/`UPDATE`/`DELETE` + `datechange`/`userchange`).
 - **Riesgos y Novedades son pestañas del modal de Proyecto** (no pantallas
   independientes), y sí llevan campo de estado (`riskstatuscat`/`riskstatus`,
   `newstatuscat`/`newstatus`) — confirmado por el usuario sobre el documento
@@ -101,6 +108,19 @@ o clases en `backend`, interfaces TypeScript en `frontend`).
   contrario.
 - `codeinstance`/`codecompany` se resuelven desde configuración fija en este
   piloto (no hay selector de instancia en ningún mockup).
+- Filtros opcionales en endpoints de búsqueda: usar JPA Specifications (cada
+  filtro devuelve `null` si el parámetro no vino), nunca JPQL con
+  `(:param IS NULL OR ...)` — ese patrón rompe con Postgres/JDBC cuando el
+  parámetro solo aparece dentro de una comparación `IS NULL`.
+- Campos de entidad con un dígito seguido de mayúscula (ej. `day1Perc`) NO
+  quedan mapeados por la estrategia de nombres por defecto de Hibernate a la
+  columna con guión bajo esperada (`day1_perc` → generaría `day1perc`) —
+  usar `@Column(name = "...")` explícito en esos casos.
+- Cuidado con el operador ternario de Java mezclando `Long`/`long`: si una
+  rama es un `Long` que puede ser `null` y la otra es un `long` primitivo
+  (p. ej. el resultado de `AuthContext.currentUserCode()`), Java desempaqueta
+  la rama `Long` para unificar tipos y lanza NPE si es `null` — usar
+  `if`/`else` en vez de ternario en esos casos.
 
 ## Módulos funcionales (ver plan para reglas de negocio detalladas)
 
@@ -115,6 +135,13 @@ o clases en `backend`, interfaces TypeScript en `frontend`).
    (`tprj_project_timesheet`), reconstruida a partir de la hoja "Registro
    diario" del Excel — no tenía mockup ni tabla definida en la especificación
    original.
+4. **Avance semanal de Schedules por consultor** — cada consultor registra,
+   semana a semana, el % de avance de sus actividades ("Hijo") del Schedule,
+   en la misma grilla que las lista (edición en línea, sin diálogo aparte).
+   Alimenta `tprj_project_schedule.advrealperc`/`advrealdays`/
+   `datestamentday`. Flujo de aprobación Registrado→Aprobado/Rechazado igual
+   que Timesheets; acceso autoservicio estricto (un consultor solo ve/edita
+   lo propio, forzado en el servidor).
 
 ## Reglas de UI/UX transversales
 
@@ -147,10 +174,8 @@ o clases en `backend`, interfaces TypeScript en `frontend`).
   + `_his` (`backend/sql/V4__timesheet_module.sql`), servicio con cálculo de
   horas en servidor, flujo de aprobación Registrado→Aprobado/Rechazado vía
   endpoint dedicado, filtros por consultor/fecha/proyecto/status usando
-  Specifications (no JPQL con `:param IS NULL OR...` — ver `docs/erd.md`,
-  ese patrón rompe con Postgres/JDBC cuando el filtro es nulo), pantalla
-  Angular en `frontend/src/app/timesheet/`. Verificado end-to-end vía API y
-  navegador.
+  Specifications, pantalla Angular en `frontend/src/app/timesheet/`.
+  Verificado end-to-end vía API y navegador.
 - ✅ **Fase 4** (Avance de Proyectos + reporte) — completa: única tabla
   nueva `tprj_project_change` + `_his` ("Cambios Aprobados",
   `backend/sql/V5__project_change_module.sql`); el resto del reporte
@@ -162,37 +187,57 @@ o clases en `backend`, interfaces TypeScript en `frontend`).
   "Registrar avance" (`PUT /api/projects/{seq}/progress`) separada del PUT
   general de cabecera. Pantalla Angular en `frontend/src/app/progress/`
   (ruta `/progress`) con selector de proyecto, filtro de fecha de corte y
-  CRUD en línea de Cambios Aprobados. Ver `docs/erd.md` para el detalle de
-  las interpretaciones de columnas del reporte (documentado también como
-  comentario de cabecera en `ProjectProgressReportService`). Verificado
-  end-to-end vía API y navegador.
+  CRUD en línea de Cambios Aprobados. Verificado end-to-end vía API y
+  navegador.
 - ✅ **Fase 5** (autenticación/roles, pulido responsive, exportación) —
-  completa, cierra el roadmap: login JWT (`backend/sql/V6__auth.sql` agrega
-  `email`/`passwordhash`/`rolecat`/`role` a `tins_user` — no se creó tabla
-  de credenciales aparte, `tins_user` ya era la identidad canónica de
-  usuario en todo el modelo), token viaja como cookie httpOnly
+  completa, cierra el roadmap original: login JWT (`backend/sql/V6__auth.sql`
+  agrega `email`/`passwordhash`/`rolecat`/`role` a `tins_user` — no se creó
+  tabla de credenciales aparte), token viaja como cookie httpOnly
   `auth_token` (nunca en el body de la respuesta), filtro propio
   (`auth/AuthFilter`) protege todo `/api/**` salvo `/api/auth/login` y
-  `/api/ping`. Roles `PRJ_USERROLECAT` (CON/AUT, mismo patrón de catálogo
-  de dos columnas que el resto del esquema) — `PUT /api/timesheets/{id}/review`
-  ahora exige rol AUT (403 si no). Contraseña de demo de los 10 usuarios
-  sembrados en Fase 1: `Llacsaa2026` (sembrada en runtime por
-  `auth/PasswordSeedRunner`, idempotente — un hash bcrypt no se puede
-  escribir a mano en SQL plano). Frontend: `LoginComponent` + `AuthGuard`
-  en las rutas `/projects`/`/progress`/`/timesheets` + `AuthInterceptor`
-  (redirige a `/login` en cualquier 401), header muestra
-  usuario/rol/"Cerrar sesión", botones Aprobar/Rechazar de Timesheets
-  ocultos para rol CON. Exportación del reporte de avance a Excel (.xlsx,
-  Apache POI) vía `GET /api/projects/{seq}/progress-report/excel`, botón
-  "Descargar Excel" en `/progress`. Pulido responsive: verificado a 375px
-  sin overflow horizontal en ninguna pantalla — ya venía cubierto desde
-  Fases 2-4 (`form-grid` auto-fit, `p-table[responsiveLayout=scroll]`,
-  wrappers `.table-scroll`), solo se ajustó el header (nav con
-  `flex-wrap`) para el nuevo bloque de usuario/logout. Verificado
-  end-to-end vía curl (401/403/200 en cada combinación de rol) y
-  navegador (login, guard, logout, persistencia de sesión tras recargar,
-  descarga de Excel).
+  `/api/ping`. Roles `PRJ_USERROLECAT` (CON/AUT) — `PUT
+  /api/timesheets/{id}/review` exige rol AUT (403 si no). Contraseña de demo
+  de los 10 usuarios sembrados en Fase 1: `Llacsaa2026` (sembrada en runtime
+  por `auth/PasswordSeedRunner`, idempotente). Frontend: `LoginComponent` +
+  `AuthGuard` en las rutas protegidas + `AuthInterceptor` (redirige a
+  `/login` en cualquier 401), header muestra usuario/rol/"Cerrar sesión".
+  Exportación del reporte de avance a Excel (.xlsx, Apache POI) vía `GET
+  /api/projects/{seq}/progress-report/excel`. Pulido responsive verificado a
+  375px sin overflow horizontal. Verificado end-to-end vía curl (401/403/200
+  en cada combinación de rol) y navegador.
+
+Con Fase 5 completa, el roadmap del plan original queda cerrado. Fases
+posteriores (6+) son módulos nuevos pedidos fuera de ese roadmap original.
+
+- ✅ **Fase 6** (avance semanal de Schedules por consultor) — módulo nuevo,
+  fuera del roadmap original, a partir de
+  `Especificación de Proyecto_Control_Proyectos_TimeSheets_2.docx`: cada
+  consultor registra semana a semana el % de avance de sus actividades
+  ("Hijo") del Schedule. Nuevas tablas `tprj_project_schedulets`,
+  `tprj_projectts_week` (con flujo Registrado→Aprobado/Rechazado, catálogo
+  `PRJ_TSWEEKSTATUSCAT`) y `tprj_projectts_week_detail` (día1-7, snapshot
+  acumulado por día) + sus 3 `_his`
+  (`backend/sql/V7__schedule_weekly_progress.sql`), paquete backend
+  `weeklyprogress/` (`WeeklyProgressService`/`Controller`, endpoints
+  `/api/schedule-progress/*`). Al guardar una semana, el último día con
+  valor se propaga como nuevo `tprj_project_schedule.advrealperc`/
+  `advrealdays`/`datestamentday`, historizado con el mismo patrón de
+  `ScheduleService` — campos que existían desde la Fase 2 pero que ningún
+  módulo alimentaba todavía. Acceso autoservicio estricto: un `CON` solo
+  ve/edita sus propias actividades (forzado en el servidor, no solo en el
+  filtro del cliente — confirmado con pruebas de API directas); un `AUT`
+  ve todos los consultores y aprueba/rechaza semanas, pero no puede
+  escribir porcentajes por otro (403). Pantalla Angular en
+  `frontend/src/app/weekly-progress/` (ruta `/weekly-progress`), grilla con
+  edición en línea (mismo patrón de la pestaña "Schedule Proyecto": toggle
+  lápiz→inputs→check/X en la misma fila, sin diálogo aparte). Verificado
+  end-to-end vía API real (curl/fetch) y navegador: registro semanal como
+  `CON`, avance reflejado en `tprj_project_schedule` y en la pestaña Schedule
+  del modal de Proyecto, aprobación como `AUT`, y los dos límites de
+  seguridad (alcance forzado en GET, 403 en PUT sobre actividad ajena)
+  confirmados con requests directos. Los dos bugs de Hibernate/ternario que
+  aparecieron durante esta fase ya quedaron generalizados como convención en
+  la sección "Convenciones del modelo de datos" de arriba.
 
 Cada fase se implementa y valida (build + prueba manual en navegador) antes
-de pasar a la siguiente. Con Fase 5 completa, el roadmap del plan original
-queda cerrado.
+de pasar a la siguiente.

@@ -1,0 +1,61 @@
+.weekly-progress-page {
+  padding: 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.page-header h2 {
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.filters .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 160px;
+}
+
+.filter-actions {
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.week-range {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.day-col {
+  text-align: center;
+  min-width: 3.5rem;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.status-tag.pending {
+  background: transparent;
+  border: 1px dashed var(--grid-strong);
+  color: var(--ink-muted);
+}
