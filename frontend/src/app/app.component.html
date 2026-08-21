@@ -6,7 +6,7 @@
     </a>
 
     <nav class="app-nav" *ngIf="currentUser">
-      <a routerLink="/projects" routerLinkActive="active">Proyectos</a>
+      <a *ngIf="currentUser.role !== 'CON'" routerLink="/projects" routerLinkActive="active">Proyectos</a>
       <a routerLink="/progress" routerLinkActive="active">Avance</a>
       <a routerLink="/timesheets" routerLinkActive="active">Timesheets</a>
       <a routerLink="/weekly-progress" routerLinkActive="active">Avance semanal</a>
