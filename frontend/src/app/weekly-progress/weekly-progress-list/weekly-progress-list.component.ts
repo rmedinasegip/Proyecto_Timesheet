@@ -92,6 +92,20 @@ export class WeeklyProgressListComponent implements OnInit {
     return `${fmt(this.weekMonday)} – ${fmt(this.weekSunday)}`;
   }
 
+  get weekBadgeLabel(): string {
+    const fmt = (d: Date) => d.toLocaleDateString('es-EC', { day: '2-digit', month: 'short' }).toUpperCase();
+    return `${fmt(this.weekMonday)} → ${fmt(this.weekSunday)} ${this.weekSunday.getFullYear()}`;
+  }
+
+  get weekDays(): { dow: string; dateLabel: string; isToday: boolean }[] {
+    const todayIso = toIsoDate(new Date());
+    return this.weekdayLabels.map((dow, i) => {
+      const d = new Date(this.weekMonday);
+      d.setDate(this.weekMonday.getDate() + i);
+      return { dow, dateLabel: String(d.getDate()).padStart(2, '0'), isToday: toIsoDate(d) === todayIso };
+    });
+  }
+
   onWeekAnchorChange(): void {
     this.recomputeWeek();
     this.reload();

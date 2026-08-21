@@ -18,11 +18,11 @@
                   [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
-      <label><b>Desde</b></label>
+      <label><b>Fecha desde</b></label>
       <input type="date" [(ngModel)]="filters.dateFrom" class="native-date" />
     </div>
     <div class="field">
-      <label><b>Hasta</b></label>
+      <label><b>Fecha hasta</b></label>
       <input type="date" [(ngModel)]="filters.dateTo" class="native-date" />
     </div>
     <div class="field">
@@ -31,7 +31,7 @@
                   [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
-      <label><b>Status</b></label>
+      <label><b>Estado</b></label>
       <p-dropdown [appendTo]="'body'" [options]="statusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="filters.status"
                   [showClear]="true" placeholder="Todos"></p-dropdown>
     </div>
@@ -39,12 +39,13 @@
       <button pButton type="button" label="Buscar" icon="pi pi-search" (click)="reload()"></button>
       <button pButton type="button" label="Limpiar" class="p-button-text" (click)="clearFilters()"></button>
     </div>
+    <div class="field stat-card">
+      <span class="stat-card__eyebrow">Horas filtradas</span>
+      <span class="stat-card__value data">{{ totalHours }}</span>
+    </div>
   </div>
 
-  <div class="totals">
-    <b>Total horas filtradas:</b> {{ totalHours }}
-  </div>
-
+  <div class="table-scroll">
   <p-table [value]="entries" [loading]="loading" [paginator]="true" [rows]="10"
            responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-striped">
     <ng-template pTemplate="header">
@@ -100,6 +101,7 @@
       <tr><td colspan="15">No hay registros para los filtros seleccionados.</td></tr>
     </ng-template>
   </p-table>
+  </div>
 </div>
 
 <p-dialog [(visible)]="formVisible" [modal]="true" [style]="{width: '40rem'}"

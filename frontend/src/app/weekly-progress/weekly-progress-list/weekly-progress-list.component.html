@@ -9,12 +9,24 @@
   </div>
   <div class="ruler-divider"></div>
 
+  <div class="week-badge">
+    <div class="week-badge__main">
+      <span class="week-badge__eyebrow">Semana registrada</span>
+      <span class="week-badge__range data">{{ weekBadgeLabel }}</span>
+    </div>
+    <div class="week-badge__ticks">
+      <span class="week-badge__tick" *ngFor="let d of weekDays" [class.week-badge__tick--today]="d.isToday">
+        <span class="week-badge__tick-dow">{{ d.dow }}</span>
+        <span class="week-badge__tick-date data">{{ d.dateLabel }}</span>
+      </span>
+    </div>
+  </div>
+
   <div class="filters">
     <div class="field">
       <label><b>Semana</b></label>
       <p-calendar [(ngModel)]="weekAnchor" dateFormat="yy-mm-dd" [appendTo]="'body'" [showIcon]="true"
                   [ngModelOptions]="{standalone: true}" (onSelect)="onWeekAnchorChange()"></p-calendar>
-      <span class="week-range data">{{ weekLabel }}</span>
     </div>
     <div class="field" *ngIf="canReview">
       <label><b>Consultor</b></label>
@@ -46,7 +58,10 @@
           <th>Actividad</th>
           <th *ngIf="canReview">Consultor</th>
           <th>Avance actual</th>
-          <th class="day-col" *ngFor="let d of weekdayLabels">{{ d }}</th>
+          <th class="day-col" *ngFor="let d of weekDays" [class.day-col--today]="d.isToday">
+            <span class="day-col__dow">{{ d.dow }}</span>
+            <span class="day-col__date data">{{ d.dateLabel }}</span>
+          </th>
           <th>Estado</th>
           <th>Acciones</th>
         </tr>
@@ -57,13 +72,13 @@
           <td>{{ row.shortactivitydesc }}</td>
           <td *ngIf="canReview">{{ row.memberName }}</td>
           <td><app-gauge [value]="row.currentAdvancePerc" [min]="0" [max]="100"></app-gauge></td>
-          <td class="day-col data">{{ row.day1Perc ?? '—' }}</td>
-          <td class="day-col data">{{ row.day2Perc ?? '—' }}</td>
-          <td class="day-col data">{{ row.day3Perc ?? '—' }}</td>
-          <td class="day-col data">{{ row.day4Perc ?? '—' }}</td>
-          <td class="day-col data">{{ row.day5Perc ?? '—' }}</td>
-          <td class="day-col data">{{ row.day6Perc ?? '—' }}</td>
-          <td class="day-col data">{{ row.day7Perc ?? '—' }}</td>
+          <td class="day-col data" [class.day-col--today]="weekDays[0].isToday">{{ row.day1Perc ?? '—' }}</td>
+          <td class="day-col data" [class.day-col--today]="weekDays[1].isToday">{{ row.day2Perc ?? '—' }}</td>
+          <td class="day-col data" [class.day-col--today]="weekDays[2].isToday">{{ row.day3Perc ?? '—' }}</td>
+          <td class="day-col data" [class.day-col--today]="weekDays[3].isToday">{{ row.day4Perc ?? '—' }}</td>
+          <td class="day-col data" [class.day-col--today]="weekDays[4].isToday">{{ row.day5Perc ?? '—' }}</td>
+          <td class="day-col data" [class.day-col--today]="weekDays[5].isToday">{{ row.day6Perc ?? '—' }}</td>
+          <td class="day-col data" [class.day-col--today]="weekDays[6].isToday">{{ row.day7Perc ?? '—' }}</td>
           <td>
             <span class="status-tag" *ngIf="row.statusName">{{ row.statusName }}</span>
             <span class="status-tag pending" *ngIf="!row.statusName">Pendiente</span>
@@ -84,31 +99,31 @@
           <td>{{ row.shortactivitydesc }}</td>
           <td *ngIf="canReview">{{ row.memberName }}</td>
           <td><app-gauge [value]="row.currentAdvancePerc" [min]="0" [max]="100"></app-gauge></td>
-          <td class="day-col">
+          <td class="day-col" [class.day-col--today]="weekDays[0].isToday">
             <p-inputNumber [(ngModel)]="editForm.day1Perc" [ngModelOptions]="{standalone: true}"
                             [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
           </td>
-          <td class="day-col">
+          <td class="day-col" [class.day-col--today]="weekDays[1].isToday">
             <p-inputNumber [(ngModel)]="editForm.day2Perc" [ngModelOptions]="{standalone: true}"
                             [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
           </td>
-          <td class="day-col">
+          <td class="day-col" [class.day-col--today]="weekDays[2].isToday">
             <p-inputNumber [(ngModel)]="editForm.day3Perc" [ngModelOptions]="{standalone: true}"
                             [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
           </td>
-          <td class="day-col">
+          <td class="day-col" [class.day-col--today]="weekDays[3].isToday">
             <p-inputNumber [(ngModel)]="editForm.day4Perc" [ngModelOptions]="{standalone: true}"
                             [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
           </td>
-          <td class="day-col">
+          <td class="day-col" [class.day-col--today]="weekDays[4].isToday">
             <p-inputNumber [(ngModel)]="editForm.day5Perc" [ngModelOptions]="{standalone: true}"
                             [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
           </td>
-          <td class="day-col">
+          <td class="day-col" [class.day-col--today]="weekDays[5].isToday">
             <p-inputNumber [(ngModel)]="editForm.day6Perc" [ngModelOptions]="{standalone: true}"
                             [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
           </td>
-          <td class="day-col">
+          <td class="day-col" [class.day-col--today]="weekDays[6].isToday">
             <p-inputNumber [(ngModel)]="editForm.day7Perc" [ngModelOptions]="{standalone: true}"
                             [min]="0" [max]="100" suffix="%" [inputStyle]="{width: '3.5rem'}"></p-inputNumber>
           </td>

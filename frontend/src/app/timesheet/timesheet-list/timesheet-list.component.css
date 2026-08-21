@@ -14,10 +14,10 @@
 }
 
 .filters {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 1rem;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: end;
   margin-bottom: 1rem;
   padding: 0.75rem;
   background: var(--surface);
@@ -28,10 +28,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  min-width: 160px;
+  min-width: 0;
 }
 
-.filter-actions {
+.filters .field.filter-actions {
   flex-direction: row;
   gap: 0.5rem;
 }
@@ -42,12 +42,56 @@
   border-radius: var(--radius);
 }
 
-.totals {
-  margin-bottom: 0.75rem;
+/* Lectura tipo "instrumento" en vez de una oración suelta — mismo par
+   eyebrow/dato grande que .week-badge en Avance semanal, pero como una
+   celda más del grid de filtros en vez de un panel propio. */
+.stat-card {
+  justify-content: center;
+  text-align: right;
+}
+
+.stat-card__eyebrow {
+  font-family: var(--font-data);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.stat-card__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--signal);
 }
 
 .actions-cell {
   white-space: nowrap;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+/* La grilla tiene 15 columnas angostas de contenido corto y formato fijo
+   (fechas, horas, nombres) — sin esto, el layout de tabla las comprime por
+   debajo de su ancho natural y el texto se parte a mitad de palabra (ver
+   "Fecha" en el reporte del usuario). Se fuerza una sola línea por celda y
+   se deja crecer el ancho total de la tabla (scrollable), salvo la columna
+   Descripción (8), que sí es texto libre y puede ocupar varias líneas.  */
+/* ::ng-deep: <thead>/<tbody> son renderizados por el propio componente
+   p-table de PrimeNG, no por el template de este componente, así que no
+   llevan el atributo de encapsulación de este archivo — sin ::ng-deep el
+   selector nunca matchea. */
+.table-scroll ::ng-deep .p-datatable-thead > tr > th,
+.table-scroll ::ng-deep .p-datatable-tbody > tr > td {
+  white-space: nowrap;
+}
+
+.table-scroll ::ng-deep .p-datatable-thead > tr > th:nth-child(8),
+.table-scroll ::ng-deep .p-datatable-tbody > tr > td:nth-child(8) {
+  white-space: normal;
+  min-width: 180px;
 }
 
 .form-grid {

@@ -187,6 +187,14 @@ a {
   border-radius: var(--radius);
   color: var(--ink);
 }
+/* PrimeNG ships these as inline-flex with no width rule of its own, so they
+   shrink to fit their content (label + icons) instead of filling whatever
+   container/grid-cell hosts them — a selected long name then reads cramped
+   or gets clipped regardless of how much room the layout actually gives it. */
+.p-dropdown,
+.p-multiselect {
+  width: 100%;
+}
 .p-inputtext:enabled:focus,
 .p-dropdown:not(.p-disabled).p-focus,
 .p-multiselect:not(.p-disabled).p-focus {

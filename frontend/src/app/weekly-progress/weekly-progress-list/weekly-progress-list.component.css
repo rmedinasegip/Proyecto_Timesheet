@@ -14,10 +14,10 @@
 }
 
 .filters {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 1rem;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: end;
   margin-bottom: 1rem;
   padding: 0.75rem;
   background: var(--surface);
@@ -28,17 +28,88 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  min-width: 160px;
+  min-width: 0;
 }
 
-.filter-actions {
+.filters .field.filter-actions {
   flex-direction: row;
   gap: 0.5rem;
 }
 
-.week-range {
-  font-size: 0.75rem;
-  color: var(--ink-muted);
+/* Franja de semana activa — el instrumento de referencia de toda la
+   pantalla: todo lo que se registra abajo pertenece a este rango exacto,
+   así que se destaca como un panel propio (fondo oscuro, rango en el color
+   de acento) en vez de un texto pequeño al lado del filtro. Los 7 "ticks"
+   de abajo son el mismo motivo de .ruler-divider, alineados 1 a 1 con las
+   columnas Lun..Dom de la grilla. */
+.week-badge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--ink);
+  border-radius: var(--radius);
+}
+
+.week-badge__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.week-badge__eyebrow {
+  font-family: var(--font-data);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--surface) 65%, transparent);
+}
+
+.week-badge__range {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--signal);
+}
+
+.week-badge__ticks {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.week-badge__tick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  min-width: 2.4rem;
+  padding: 0.25rem 0.4rem 0;
+  border-top: 2px solid color-mix(in srgb, var(--surface) 30%, transparent);
+}
+
+.week-badge__tick-dow {
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--surface) 65%, transparent);
+}
+
+.week-badge__tick-date {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--surface);
+}
+
+.week-badge__tick--today {
+  border-top-color: var(--signal);
+}
+
+.week-badge__tick--today .week-badge__tick-date {
+  color: var(--signal);
 }
 
 .table-scroll {
@@ -48,6 +119,43 @@
 .day-col {
   text-align: center;
   min-width: 3.5rem;
+}
+
+/* Cabecera de columna de día: mismo par día-semana/fecha que .week-badge__tick,
+   para que la grilla se lea como continuación directa de la franja de arriba.
+   Los spans van en bloque (no flex en el <th>: mantenerlo table-cell evita
+   que se descuadre del ancho de columna de su <td> correspondiente). */
+.day-col__dow,
+.day-col__date {
+  display: block;
+  line-height: 1.3;
+}
+
+.day-col__dow {
+  font-size: 0.65rem;
+}
+
+/* El <th> hereda fondo oscuro (--ink) del theme de la tabla — el sub-label
+   de fecha necesita un tono claro, no --ink-muted (pensado para fondo claro). */
+.day-col__date {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+td.day-col--today {
+  background: color-mix(in srgb, var(--signal) 12%, transparent);
+}
+
+/* El <th> ya trae fondo opaco (--ink) desde el theme global de la tabla con
+   más especificidad que una clase sola — hay que igualarla explícitamente
+   (mezclando con --ink, no con transparent, para no aclarar la cabecera). */
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th.day-col--today {
+  background: color-mix(in srgb, var(--signal) 25%, var(--ink));
+}
+
+th.day-col--today .day-col__date {
+  color: var(--signal);
 }
 
 .actions-cell {
