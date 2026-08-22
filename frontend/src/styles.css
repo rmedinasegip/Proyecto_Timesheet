@@ -294,30 +294,92 @@ a {
   color: var(--signal-ink);
 }
 
-/* Tabs */
-.p-tabview-nav {
+/* Tabs — barra horizontal única para las 10 pestañas del modal de Proyecto
+   (Ver/Editar/Nuevo comparten el mismo <p-tabview>). PrimeNG ya deja el
+   nav-content con overflow-x:auto y sin scrollbar visible (ver
+   node_modules/primeng tabview.css) — nunca se ocultan en un dropdown, solo
+   se deslizan; el fade de los bordes (más abajo) es la única pista de que
+   hay más pestañas fuera de pantalla. */
+.p-tabview-nav-container {
+  position: relative;
+}
+/* Fade a los costados del contenedor scrollable, para insinuar en mobile
+   que hay más pestañas fuera de pantalla sin agregar flechas ni recortar
+   contenido — se ve siempre (no solo con overflow real) porque es barato
+   detectarlo en CSS puro y no estorba cuando no hace falta. */
+.p-tabview-nav-container::before,
+.p-tabview-nav-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1.75rem;
+  pointer-events: none;
+  z-index: 2;
+}
+.p-tabview-nav-container::before {
+  left: 0;
+  background: linear-gradient(to right, var(--surface), transparent);
+}
+.p-tabview-nav-container::after {
+  right: 0;
+  background: linear-gradient(to left, var(--surface), transparent);
+}
+/* Prefijo .p-tabview: el theme.css de saga-blue define estas mismas reglas
+   con ese mismo prefijo (misma especificidad, (0,4,0) en el caso resaltado)
+   — sin igualarlo, el azul de fábrica del theme gana por especificidad
+   aunque este archivo se cargue después en angular.json. */
+.p-tabview .p-tabview-nav {
   background: transparent;
   border-color: var(--grid-strong);
 }
-.p-tabview-nav li .p-tabview-nav-link {
+.p-tabview .p-tabview-nav li {
+  margin-right: 0.15rem;
+}
+.p-tabview .p-tabview-nav li + li {
+  border-left: 1px solid var(--grid);
+}
+.p-tabview .p-tabview-nav li .p-tabview-nav-link {
   background: transparent;
-  border-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
   color: var(--ink-muted);
   font-family: var(--font-data);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  padding: 0.9rem 1.1rem;
   border-radius: 0;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
-.p-tabview-nav li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
-  border-color: var(--grid-strong);
+.p-tabview .p-tabview-nav li:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
+  background: color-mix(in srgb, var(--signal) 8%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--signal) 35%, transparent);
   color: var(--ink);
 }
-.p-tabview-nav li.p-highlight .p-tabview-nav-link {
-  background: var(--surface);
-  border-color: var(--grid-strong) var(--grid-strong) var(--surface);
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  background: color-mix(in srgb, var(--signal) 10%, var(--surface));
+  border-bottom-color: var(--signal);
   color: var(--signal);
+}
+/* Flechas de [scrollable]="true": sin esto no hay forma de llegar con mouse
+   a las pestañas finales (Novedades/Auditoría) — el contenedor scrollable
+   de PrimeNG no admite arrastre ni scroll con la rueda vertical del mouse,
+   solo drag de una scrollbar que además viene oculta por diseño. */
+.p-tabview .p-tabview-nav-btn.p-link {
+  background: var(--surface);
+  color: var(--ink-muted);
+  box-shadow: none;
+}
+.p-tabview .p-tabview-nav-btn.p-link:hover {
+  color: var(--signal);
+}
+.p-tabview .p-tabview-nav-prev {
+  border-right: 1px solid var(--grid);
+}
+.p-tabview .p-tabview-nav-next {
+  border-left: 1px solid var(--grid);
 }
 .p-tabview-panels {
   background: var(--surface);

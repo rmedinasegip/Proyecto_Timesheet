@@ -90,6 +90,7 @@ function emptyScheduleForm() {
 })
 export class ProjectFormComponent implements OnInit {
   @Input() seq: number | null = null;
+  @Input() readOnly = false;
   @Output() closed = new EventEmitter<boolean>();
 
   currentSeq: number | null = null;

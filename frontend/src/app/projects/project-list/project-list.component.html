@@ -11,6 +11,7 @@
   </div>
   <div class="ruler-divider"></div>
 
+  <div class="table-scroll">
   <p-table [value]="projects" [loading]="loading" [paginator]="true" [rows]="10"
            responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-striped">
     <ng-template pTemplate="header">
@@ -21,7 +22,7 @@
         <th>Nombre</th>
         <th>Cliente</th>
         <th>Cód. PM</th>
-        <th>Nombre PM</th>
+        <th>Product Manager</th>
         <th>Duración base</th>
         <th>Fecha inicio base</th>
         <th>Fecha fin base</th>
@@ -49,6 +50,8 @@
         <td>{{ project.plannedEndDate }}</td>
         <td>{{ project.statusName }}</td>
         <td>
+          <button pButton type="button" icon="pi pi-search" class="p-button-text p-button-sm"
+                  (click)="openView(project)" pTooltip="Ver"></button>
           <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
                   (click)="openEdit(project)" pTooltip="Editar"></button>
           <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
@@ -62,9 +65,10 @@
       </tr>
     </ng-template>
   </p-table>
+  </div>
 </div>
 
 <p-dialog [(visible)]="showForm" [modal]="true" [style]="{width: '90vw', maxWidth: '1100px'}"
-          [header]="selectedSeq ? 'Editar Proyecto' : 'Nuevo Proyecto'" [dismissableMask]="false">
-  <app-project-form *ngIf="showForm" [seq]="selectedSeq" (closed)="onFormClosed($event)"></app-project-form>
+          [header]="viewMode ? 'Ver Proyecto' : (selectedSeq ? 'Editar Proyecto' : 'Nuevo Proyecto')" [dismissableMask]="false">
+  <app-project-form *ngIf="showForm" [seq]="selectedSeq" [readOnly]="viewMode" (closed)="onFormClosed($event)"></app-project-form>
 </p-dialog>

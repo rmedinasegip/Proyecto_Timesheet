@@ -8,26 +8,26 @@
     <span><b>Cliente:</b> {{ detail.customerName }}</span>
   </div>
 
-  <p-tabView>
+  <p-tabView [scrollable]="true">
     <!-- 1. Datos Generales -->
     <p-tabPanel header="Datos generales">
       <div class="form-grid">
         <div class="field"><label><b>N.º contrato / propuesta</b></label>
-          <input pInputText [(ngModel)]="form.contractNumber" /></div>
+          <input pInputText [(ngModel)]="form.contractNumber" [disabled]="readOnly" /></div>
         <div class="field"><label><b>Código proyecto</b></label>
-          <input pInputText [(ngModel)]="form.projectCode" required /></div>
+          <input pInputText [(ngModel)]="form.projectCode" [disabled]="readOnly" required /></div>
         <div class="field"><label><b>Nombre del proyecto</b></label>
-          <input pInputText [(ngModel)]="form.projectName" required /></div>
+          <input pInputText [(ngModel)]="form.projectName" [disabled]="readOnly" required /></div>
         <div class="field full"><label><b>Descripción extendida</b></label>
-          <textarea pInputTextarea [(ngModel)]="form.projectDescription" rows="3"></textarea></div>
+          <textarea pInputTextarea [(ngModel)]="form.projectDescription" [disabled]="readOnly" rows="3"></textarea></div>
         <div class="field"><label><b>Cliente</b></label>
           <p-dropdown [appendTo]="'body'" [options]="customers" optionLabel="name" optionValue="code" [(ngModel)]="form.codecustomer"
-                      placeholder="Seleccione cliente" [filter]="true"></p-dropdown></div>
+                      [disabled]="readOnly" placeholder="Seleccione cliente" [filter]="true"></p-dropdown></div>
         <div class="field"><label><b>Fecha de solicitud</b></label>
-          <p-calendar [(ngModel)]="form.requestDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.requestDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [disabled]="readOnly" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Código Project Manager</b></label>
           <p-dropdown [appendTo]="'body'" [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="form.codeuserPm"
-                      placeholder="Seleccione PM" [filter]="true"></p-dropdown></div>
+                      [disabled]="readOnly" placeholder="Seleccione PM" [filter]="true"></p-dropdown></div>
       </div>
     </p-tabPanel>
 
@@ -35,15 +35,15 @@
     <p-tabPanel header="Planificación">
       <div class="form-grid">
         <div class="field"><label><b>Duración del proyecto (días)</b></label>
-          <p-inputNumber [(ngModel)]="form.projectDuration"></p-inputNumber></div>
+          <p-inputNumber [(ngModel)]="form.projectDuration" [disabled]="readOnly"></p-inputNumber></div>
         <div class="field"><label><b>Fecha inicio base</b></label>
-          <p-calendar [(ngModel)]="form.baseStartDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.baseStartDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [disabled]="readOnly" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Fecha fin base</b></label>
-          <p-calendar [(ngModel)]="form.baseEndDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.baseEndDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [disabled]="readOnly" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Fecha inicio planificación</b></label>
-          <p-calendar [(ngModel)]="form.plannedStartDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.plannedStartDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [disabled]="readOnly" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Fecha fin planificación</b></label>
-          <p-calendar [(ngModel)]="form.plannedEndDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.plannedEndDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [disabled]="readOnly" [showIcon]="true"></p-calendar></div>
       </div>
     </p-tabPanel>
 
@@ -51,15 +51,15 @@
     <p-tabPanel header="Ejecución real">
       <div class="form-grid">
         <div class="field"><label><b>Fecha inicio real</b></label>
-          <p-calendar [(ngModel)]="form.realStartDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.realStartDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [disabled]="readOnly" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Fecha fin real</b></label>
-          <p-calendar [(ngModel)]="form.realEndDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [showIcon]="true"></p-calendar></div>
+          <p-calendar [(ngModel)]="form.realEndDate" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'" [disabled]="readOnly" [showIcon]="true"></p-calendar></div>
         <div class="field"><label><b>Estado</b></label>
           <p-dropdown [appendTo]="'body'" [options]="projectStatusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="form.status"
-                      [ngModelOptions]="{standalone: true}" placeholder="Seleccione estado"></p-dropdown>
+                      [ngModelOptions]="{standalone: true}" [disabled]="readOnly" placeholder="Seleccione estado"></p-dropdown>
         </div>
       </div>
-      <div class="form-actions">
+      <div class="form-actions" *ngIf="!readOnly">
         <button pButton type="button" [label]="isEditMode ? 'Guardar cambios' : 'Guardar Proyecto'"
                 icon="pi pi-save" [loading]="saving" (click)="saveHeader()"></button>
       </div>
@@ -69,7 +69,7 @@
     <p-tabPanel header="Equipo de trabajo" [disabled]="!currentSeq">
       <p class="hint" *ngIf="!currentSeq">Guarde el proyecto primero para gestionar el equipo.</p>
       <ng-container *ngIf="currentSeq">
-        <div class="inline-form">
+        <div class="inline-form" *ngIf="!readOnly">
           <p-dropdown [appendTo]="'body'" [options]="users" optionLabel="name" optionValue="code" [(ngModel)]="newTeamMember.memberuser"
                       [ngModelOptions]="{standalone: true}" placeholder="Consultor" [filter]="true"></p-dropdown>
           <p-dropdown [appendTo]="'body'" [options]="projectRolItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newTeamMember.projectrol"
@@ -87,7 +87,7 @@
               <td>{{ member.memberName }}</td>
               <td>{{ member.projectrol }}</td>
               <td>{{ member.assignmentdate }}</td>
-              <td><button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+              <td><button *ngIf="!readOnly" pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
                           (click)="removeTeamMember(member)"></button></td>
             </tr>
           </ng-template>
@@ -119,7 +119,7 @@
         <div class="field"><label><b>% Variación asignación planificada</b></label><div>{{ detail.varadvplannedperc ?? '—' }}</div></div>
         <div class="field"><label><b>% Efectividad</b></label><div>{{ detail.efectivityperc ?? '—' }}</div></div>
       </div>
-      <div class="form-actions">
+      <div class="form-actions" *ngIf="!readOnly">
         <button pButton type="button" label="Registrar avance" icon="pi pi-chart-line" (click)="openProgressForm()"></button>
       </div>
     </p-tabPanel>
@@ -127,7 +127,7 @@
     <!-- 7. Schedule Proyecto -->
     <p-tabPanel header="Schedule proyecto" [disabled]="!currentSeq">
       <ng-container *ngIf="currentSeq">
-        <div class="form-actions">
+        <div class="form-actions" *ngIf="!readOnly">
           <button pButton type="button" label="+ Nueva actividad" icon="pi pi-plus" (click)="openScheduleForm()"></button>
         </div>
         <p-table [value]="schedule" styleClass="p-datatable-sm">
@@ -149,7 +149,7 @@
               <td>{{ row.basedaystotal ?? '—' }}</td>
               <td>{{ row.baseStartDate || '—' }}</td>
               <td>{{ row.baseEndDate || '—' }}</td>
-              <td>
+              <td *ngIf="!readOnly">
                 <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
                         (click)="startEditSchedule(row)"></button>
                 <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
@@ -192,7 +192,7 @@
     <!-- 8. Riesgos -->
     <p-tabPanel header="Riesgos" [disabled]="!currentSeq">
       <ng-container *ngIf="currentSeq">
-        <div class="inline-form wrap">
+        <div class="inline-form wrap" *ngIf="!readOnly">
           <p-calendar [(ngModel)]="newRisk.riskdate" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"
                       placeholder="Fecha identificación" [showIcon]="true"></p-calendar>
           <p-dropdown [appendTo]="'body'" [options]="riskTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newRisk.risktypeimpact"
@@ -218,7 +218,7 @@
               <td>{{ row.solution || '—' }}</td>
               <td>{{ row.probabilityperc }}</td>
               <td>{{ row.riskstatusName }}</td>
-              <td>
+              <td *ngIf="!readOnly">
                 <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="startEditRisk(row)"></button>
                 <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteRisk(row)"></button>
               </td>
@@ -252,7 +252,7 @@
     <!-- 9. Novedades -->
     <p-tabPanel header="Novedades" [disabled]="!currentSeq">
       <ng-container *ngIf="currentSeq">
-        <div class="inline-form wrap">
+        <div class="inline-form wrap" *ngIf="!readOnly">
           <p-calendar [(ngModel)]="newNews.datenewarrival" [ngModelOptions]="{standalone: true}" dateFormat="yy-mm-dd" dataType="string" [appendTo]="'body'"
                       placeholder="Fecha novedad" [showIcon]="true"></p-calendar>
           <p-dropdown [appendTo]="'body'" [options]="newsTypeItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="newNews.newstypeimpact"
@@ -280,7 +280,7 @@
               <td>{{ row.company }}</td>
               <td>{{ row.solution || '—' }}</td>
               <td>{{ row.newstatusName }}</td>
-              <td>
+              <td *ngIf="!readOnly">
                 <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="startEditNews(row)"></button>
                 <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteNews(row)"></button>
               </td>
@@ -324,7 +324,7 @@
   </p-tabView>
 
   <div class="dialog-footer">
-    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="close()"></button>
+    <button pButton type="button" [label]="readOnly ? 'Cerrar' : 'Cancelar'" class="p-button-text" (click)="close()"></button>
   </div>
 </div>
 

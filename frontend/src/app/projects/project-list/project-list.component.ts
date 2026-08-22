@@ -15,6 +15,7 @@ export class ProjectListComponent implements OnInit {
 
   showForm = false;
   selectedSeq: number | null = null;
+  viewMode = false;
 
   constructor(
     private projectService: ProjectService,
@@ -42,11 +43,19 @@ export class ProjectListComponent implements OnInit {
 
   openNew(): void {
     this.selectedSeq = null;
+    this.viewMode = false;
     this.showForm = true;
   }
 
   openEdit(project: ProjectListItem): void {
     this.selectedSeq = project.seq;
+    this.viewMode = false;
+    this.showForm = true;
+  }
+
+  openView(project: ProjectListItem): void {
+    this.selectedSeq = project.seq;
+    this.viewMode = true;
     this.showForm = true;
   }
 
@@ -75,6 +84,7 @@ export class ProjectListComponent implements OnInit {
   onFormClosed(saved: boolean): void {
     this.showForm = false;
     this.selectedSeq = null;
+    this.viewMode = false;
     if (saved) {
       this.reload();
     }

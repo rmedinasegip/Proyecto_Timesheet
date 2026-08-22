@@ -12,3 +12,30 @@
 .page-header h2 {
   margin: 0;
 }
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+/* Columnas de fecha/número de formato fijo y corto (Fecha inicio/fin base,
+   Fecha inicio/fin planificación, Duración, etc.) — el layout de tabla las
+   comprime por debajo de su ancho natural y el texto se parte en dos líneas
+   (ver "Fecha fin base" en el reporte del usuario). Se fuerza una sola línea
+   por celda (dato) y se deja crecer el ancho total de la tabla (scrollable)
+   en vez de truncar o partir el contenido. */
+.table-scroll ::ng-deep .p-datatable-tbody > tr > td {
+  white-space: nowrap;
+}
+
+/* Los encabezados en cambio sí pueden partirse en dos líneas: el título
+   ("Fecha inicio planificación") suele ser más ancho que su propio dato
+   ("2026-08-19"), así que si se le fuerza una sola línea la columna termina
+   siendo más ancha de lo que el contenido necesita y aparece scroll
+   horizontal que no hace falta. Envolviendo el título en dos líneas, la
+   columna se ajusta al ancho del dato (ya con nowrap) en vez del título. */
+.table-scroll ::ng-deep .p-datatable-thead > tr > th {
+  white-space: normal;
+  word-break: normal;
+  line-height: 1.25;
+  vertical-align: bottom;
+}

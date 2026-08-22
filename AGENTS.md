@@ -127,7 +127,10 @@ o clases en `backend`, interfaces TypeScript en `frontend`).
 1. **Módulo Proyecto** — grilla + modal de 10 pestañas: Datos Generales,
    Planificación, Ejecución Real, Equipo de Trabajo, Consulta, Avance,
    Schedule Proyecto (edición en línea, jerarquía Padre/Hermano/Hijo),
-   Riesgos, Novedades, Auditoría.
+   Riesgos, Novedades, Auditoría. La grilla tiene 3 acciones por fila: Ver
+   (lupa, `ProjectFormComponent [readOnly]="true"` — mismo modal de 10
+   pestañas en modo solo lectura, sin crear/editar/eliminar), Editar y
+   Eliminar.
 2. **Avance de Proyectos** — reporte agregado equivalente a la hoja "Detalle"
    del Excel (Días del proyecto, Riesgos, Novedades, Hitos, Cambios
    Aprobados).
@@ -238,6 +241,38 @@ posteriores (6+) son módulos nuevos pedidos fuera de ese roadmap original.
   confirmados con requests directos. Los dos bugs de Hibernate/ternario que
   aparecieron durante esta fase ya quedaron generalizados como convención en
   la sección "Convenciones del modelo de datos" de arriba.
+
+- ✅ **Fase 7** (ajustes de UI/UX y acceso por rol) — pedidos puntuales fuera
+  del roadmap original, todos frontend:
+  - **Menú por rol**: el link "Proyectos" del header (`app.component.html`)
+    se oculta con `*ngIf="currentUser.role !== 'CON'"` cuando el usuario
+    logueado es `CON`; un `AUT` lo sigue viendo igual. Es el único ajuste de
+    menú/acceso por rol implementado — no hay guard de ruta ni bloqueo en
+    backend para `/projects`/`/timesheets`/`/progress` bajo `CON` (decisión
+    explícita del usuario: se pidió acotar el cambio solo al link del menú).
+  - **Acción "Ver" en la grilla de Proyectos** (ícono de lupa, junto a
+    Editar/Eliminar): abre el mismo modal de 10 pestañas con
+    `ProjectFormComponent.readOnly` (`@Input`) en `true` — todos los campos
+    de Datos generales/Planificación/Ejecución real quedan `disabled`, se
+    ocultan los botones de creación/edición/eliminación en Equipo/Schedule/
+    Riesgos/Novedades y los botones "Guardar cambios"/"Registrar avance", y
+    el footer dice "Cerrar" en vez de "Cancelar".
+  - **Barra de pestañas del modal de Proyecto rediseñada**: se agregó
+    `[scrollable]="true"` al `<p-tabView>` — sin ese input PrimeNG no
+    dibuja flechas de navegación y las 10 pestañas solo se desplazaban por
+    un overflow-x sin scrollbar visible ni soporte de arrastre con mouse,
+    o sea que no había forma real de llegar a Novedades/Auditoría. Se
+    agregó también subrayado de 3px en `--signal` para la pestaña activa,
+    hover con fondo tintado, separadores finos entre pestañas y fade en los
+    bordes del contenedor scrollable (todo en `styles.css`, con selectores
+    prefijados `.p-tabview` porque el theme `saga-blue` define las mismas
+    reglas con esa misma especificidad y gana si no se iguala).
+  - **Encabezados de tabla en dos líneas**: en la grilla de Proyectos (y ya
+    antes en Timesheets) los `<th>` permiten wrap (`white-space: normal`)
+    mientras los `<td>` de datos siguen forzados a una sola línea
+    (`white-space: nowrap`) — evita que un título largo ("Fecha inicio
+    planificación") ensanche la columna más que su propio dato y dispare
+    scroll horizontal innecesario.
 
 Cada fase se implementa y valida (build + prueba manual en navegador) antes
 de pasar a la siguiente.
