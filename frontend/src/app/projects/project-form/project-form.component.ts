@@ -97,6 +97,9 @@ export class ProjectFormComponent implements OnInit {
   detail: ProjectDetail | null = null;
   savedOnce = false;
 
+  /** Riesgos/Novedades/Schedule: las fechas registradas no pueden ser retroactivas. */
+  readonly todayDate = new Date();
+
   form: ProjectSaveRequest = emptyProjectForm();
   saving = false;
 
@@ -194,7 +197,68 @@ export class ProjectFormComponent implements OnInit {
     this.reloadNews();
   }
 
+  /**
+   * Convierte un string "yyyy-mm-dd" a Date en hora local. `new Date(str)`
+   * lo parsea como UTC medianoche — en timezones de offset negativo eso cae
+   * al día anterior en hora local, corriendo cualquier minDate basado en él
+   * un día para atrás (ej. el 22 quedaba habilitado en vez del 23).
+   */
+  private parseLocalDate(value: string | null): Date | null {
+    if (!value) {
+      return null;
+    }
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  private minDateOrFloor(value: string | null): Date {
+    return this.parseLocalDate(value) ?? new Date(1900, 0, 1);
+  }
+
+  /** Fecha fin base no puede ser anterior a Fecha inicio base. */
+  get minBaseEndDate(): Date {
+    return this.minDateOrFloor(this.form.baseStartDate);
+  }
+
+  /** Fecha fin planificación no puede ser anterior a Fecha inicio planificación. */
+  get minPlannedEndDate(): Date {
+    return this.minDateOrFloor(this.form.plannedStartDate);
+  }
+
+  /** Ejecución real: Fin real no puede ser anterior a Inicio real. */
+  get minRealEndDate(): Date {
+    return this.minDateOrFloor(this.form.realStartDate);
+  }
+
+  private datesOutOfOrder(startDate: string | null, endDate: string | null): boolean {
+    return !!startDate && !!endDate && endDate < startDate;
+  }
+
   saveHeader(): void {
+    if (this.datesOutOfOrder(this.form.baseStartDate, this.form.baseEndDate)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Fechas inválidas',
+        detail: 'La fecha fin base no puede ser anterior a la fecha inicio base'
+      });
+      return;
+    }
+    if (this.datesOutOfOrder(this.form.plannedStartDate, this.form.plannedEndDate)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Fechas inválidas',
+        detail: 'La fecha fin planificación no puede ser anterior a la fecha inicio planificación'
+      });
+      return;
+    }
+    if (this.datesOutOfOrder(this.form.realStartDate, this.form.realEndDate)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Fechas inválidas',
+        detail: 'La fecha fin real no puede ser anterior a la fecha inicio real'
+      });
+      return;
+    }
     this.saving = true;
     if (!this.currentSeq) {
       this.projectService.create(this.form).subscribe({

@@ -108,15 +108,16 @@ public class ScheduleService {
     @Transactional
     public ScheduleView update(Long seqproject, Long seqschedule, ScheduleUpdateRequest request) {
         TprjProjectSchedule s = findOrThrow(seqproject, seqschedule);
-        boolean isPadre = s.getMemberuser() == null;
 
         s.setShortactivitydesc(request.getShortactivitydesc());
         s.setActivitydesc(request.getActivitydesc());
 
-        if (!isPadre) {
-            applyHijoFields(s, request.getMemberuser(), request.getBasedays(), request.getBaseadicional(),
-                    request.getBaseStartDate(), request.getBaseEndDate());
-        }
+        // A diferencia de la creación (donde Padre/Hermano/Hijo define el tipo
+        // inicial de la fila), en edición se permite completar Responsable/
+        // Días/Fechas de cualquier fila que ya tenga esa información — la
+        // pantalla ya no oculta estos campos solo por ser "Padre".
+        applyHijoFields(s, request.getMemberuser(), request.getBasedays(), request.getBaseadicional(),
+                request.getBaseStartDate(), request.getBaseEndDate());
 
         s.setUserlastmodify(AuthContext.currentUserCode());
         s.setDatemodify(LocalDateTime.now());

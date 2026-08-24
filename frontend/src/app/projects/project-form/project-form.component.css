@@ -19,6 +19,24 @@
   grid-template-columns: 1fr;
 }
 
+/* Planificación tiene 5 campos — con el minmax(220px) genérico caben 4 por
+   fila en el ancho del diálogo (90vw, hasta 1100px) y el 5to queda solo en
+   su propia fila. Un track más ancho fuerza 3 por fila: Duración/Inicio
+   base/Fin base en la primera, Inicio/Fin planificación en la segunda —
+   agrupa cada par de fechas junto y ninguna fila queda con un solo campo
+   huérfano. */
+.planning-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Datos generales: mismo ajuste — con minmax(220px) genérico, en pantallas
+   muy anchas caben más de 3 columnas y las filas de 3 campos (antes y
+   después de la Descripción a ancho completo) quedan angostas con espacio
+   vacío a la derecha, en vez de ocupar el mismo ancho que la Descripción. */
+.general-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -57,6 +75,92 @@
 
 .inline-form.wrap > * {
   min-width: 140px;
+}
+
+/* Cabecera de alta de Riesgos/Novedades: antes era un flex-wrap de solo
+   inputs con placeholder (sin etiqueta), que se apilaba de forma dispareja
+   según el ancho de cada control. Un grid con una fila label+control por
+   campo (mismo patrón que .filters en Timesheets/Avance semanal) alinea
+   todo en columnas parejas y deja claro qué es cada campo sin depender del
+   placeholder. */
+.inline-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.inline-form-grid .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.inline-form-grid .field input,
+.inline-form-grid .field p-dropdown,
+.inline-form-grid .field p-calendar,
+.inline-form-grid .field p-inputnumber {
+  width: 100%;
+}
+
+.inline-form-actions {
+  justify-content: flex-end;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+/* Columna Fecha de las grillas de Riesgos/Novedades (1ra columna) — el
+   layout de tabla la comprime por debajo de su ancho natural y la parte en
+   dos líneas. Es la única columna de formato fijo corto que necesita una
+   sola línea sí o sí; el resto (Descripción, Responsable, Compañía, etc.)
+   son texto libre y se dejan envolver según su propio contenido, sin forzar
+   nowrap. No aplica a Schedule (.schedule-table), que tiene su propio set
+   de columnas de fecha más abajo. */
+.table-scroll:not(.schedule-table) ::ng-deep .p-datatable-thead > tr > th:first-child,
+.table-scroll:not(.schedule-table) ::ng-deep .p-datatable-tbody > tr > td:first-child {
+  white-space: nowrap;
+}
+
+/* Schedule Proyecto: Fecha inicio/fin base son las columnas 6 y 7 (Descripción
+   va primero y sí debe poder envolver en varias líneas según su contenido).
+   Días base/Días adicional/Total días base se alinean a la derecha, más
+   legible para columnas numéricas y mejor aprovechamiento del espacio que
+   dejarlas a la izquierda igual que el texto. */
+.schedule-table ::ng-deep .p-datatable-thead > tr > th:nth-child(6),
+.schedule-table ::ng-deep .p-datatable-thead > tr > th:nth-child(7),
+.schedule-table ::ng-deep .p-datatable-tbody > tr > td:nth-child(6),
+.schedule-table ::ng-deep .p-datatable-tbody > tr > td:nth-child(7) {
+  white-space: nowrap;
+}
+
+.schedule-table ::ng-deep .num-col {
+  text-align: right;
+}
+
+.schedule-table ::ng-deep .schedule-edit-row td {
+  vertical-align: top;
+}
+
+/* Sin estas dos, con table-layout:auto (ver responsiveLayout="scroll" más
+   abajo) las columnas de fecha (nowrap, más anchas por su propio texto)
+   comprimían Descripción/Responsable hasta un ancho menor a su contenido —
+   el texto se desbordaba visualmente por encima de la columna siguiente en
+   vez de respetar el borde de celda. */
+.schedule-table ::ng-deep .p-datatable-thead > tr > th:first-child,
+.schedule-table ::ng-deep .p-datatable-tbody > tr > td:first-child {
+  min-width: 200px;
+}
+
+.schedule-table ::ng-deep .p-datatable-thead > tr > th:nth-child(2),
+.schedule-table ::ng-deep .p-datatable-tbody > tr > td:nth-child(2) {
+  min-width: 150px;
 }
 
 .dialog-footer {

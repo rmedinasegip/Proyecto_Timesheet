@@ -50,17 +50,26 @@
   padding: 0.75rem 1rem 1rem;
   background: var(--surface);
   border-radius: var(--radius);
+  overflow: hidden;
 }
 
+/* Antes era un eyebrow gris chico, casi indistinguible del resto del texto
+   — se pidió que "sobresalga". Barra oscura de ancho completo (mismo motivo
+   que .week-badge en Avance semanal) en vez de una etiqueta más: separa
+   visualmente cada bloque de información y el título queda imposible de
+   pasar por alto. */
 .info-panel__heading {
   display: block;
+  margin: -0.75rem -1rem 0.75rem;
+  padding: 0.65rem 1rem;
+  background: var(--ink);
+  border-radius: var(--radius) var(--radius) 0 0;
   font-family: var(--font-data);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-muted);
-  margin-bottom: 0.5rem;
+  color: var(--signal);
 }
 
 .info-grid {

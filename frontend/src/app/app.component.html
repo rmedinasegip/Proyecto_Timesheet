@@ -7,9 +7,9 @@
 
     <nav class="app-nav" *ngIf="currentUser">
       <a *ngIf="currentUser.role !== 'CON'" routerLink="/projects" routerLinkActive="active">Proyectos</a>
-      <a routerLink="/progress" routerLinkActive="active">Avance</a>
-      <a routerLink="/timesheets" routerLinkActive="active">Timesheets</a>
-      <a routerLink="/weekly-progress" routerLinkActive="active">Avance semanal</a>
+      <a routerLink="/timesheets" routerLinkActive="active">Cronograma</a>
+      <a routerLink="/progress" routerLinkActive="active">Avance Proyecto</a>
+      <a routerLink="/weekly-progress" routerLinkActive="active">Avance Proyecto Semanal</a>
     </nav>
 
     <div class="app-header__account">

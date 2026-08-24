@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,6 +76,16 @@ public class RiskService {
         riskRepository.delete(r);
     }
 
+    private BigDecimal validateProbability(BigDecimal probabilityperc) {
+        if (probabilityperc == null) {
+            return null;
+        }
+        if (probabilityperc.compareTo(BigDecimal.ZERO) < 0 || probabilityperc.compareTo(new BigDecimal("100")) > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La probabilidad debe estar entre 0 y 100");
+        }
+        return probabilityperc;
+    }
+
     private TprjProjectRisk findOrThrow(Long seqproject, Long seqrisk) {
         return riskRepository.findById(seqrisk)
                 .filter(r -> r.getSeqproject().equals(seqproject))
@@ -89,7 +100,7 @@ public class RiskService {
         r.setPersonincharge(request.getPersonincharge());
         r.setCompany(request.getCompany());
         r.setSolution(request.getSolution());
-        r.setProbabilityperc(request.getProbabilityperc());
+        r.setProbabilityperc(validateProbability(request.getProbabilityperc()));
         r.setRiskstatuscat(RISKSTATUSCAT);
         if (request.getRiskstatus() != null) {
             r.setRiskstatus(request.getRiskstatus());

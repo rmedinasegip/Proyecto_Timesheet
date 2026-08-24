@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -177,7 +178,19 @@ public class ProjectService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proyecto no encontrado: " + seq));
     }
 
+    private void validateDateOrder(LocalDate start, LocalDate end, String message) {
+        if (start != null && end != null && end.isBefore(start)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+        }
+    }
+
     private void applyRequest(TprjProject p, ProjectSaveRequest r) {
+        validateDateOrder(r.getBaseStartDate(), r.getBaseEndDate(),
+                "La fecha fin base no puede ser anterior a la fecha inicio base");
+        validateDateOrder(r.getPlannedStartDate(), r.getPlannedEndDate(),
+                "La fecha fin planificación no puede ser anterior a la fecha inicio planificación");
+        validateDateOrder(r.getRealStartDate(), r.getRealEndDate(),
+                "La fecha fin real no puede ser anterior a la fecha inicio real");
         p.setContractNumber(r.getContractNumber());
         p.setProjectCode(r.getProjectCode());
         p.setProjectName(r.getProjectName());
