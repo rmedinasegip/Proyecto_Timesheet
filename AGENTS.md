@@ -273,6 +273,79 @@ posteriores (6+) son módulos nuevos pedidos fuera de ese roadmap original.
     (`white-space: nowrap`) — evita que un título largo ("Fecha inicio
     planificación") ensanche la columna más que su propio dato y dispare
     scroll horizontal innecesario.
+  - **Menú renombrado y reordenado**: `Timesheets`→`Cronograma`,
+    `Avance`→`Avance Proyecto`, `Avance Semanal`→`Avance Proyecto Semanal`,
+    manteniendo las rutas (`/timesheets`, `/progress`, `/weekly-progress`)
+    intactas — solo cambia la etiqueta visible y el orden de despliegue.
+  - **Riesgos/Novedades (pestañas del modal de Proyecto)**: cabecera de alta
+    reorganizada en `.inline-form-grid` (grid de `.field` label+control, un
+    campo por celda, mismo patrón que `.filters` en Timesheets/Avance
+    semanal) en vez del `.inline-form` flex-wrap sin etiquetas que traía
+    antes; columna Fecha forzada a una sola línea
+    (`.table-scroll:not(.schedule-table) th/td:first-child { white-space:
+    nowrap }`), el resto de columnas envuelve libremente según su
+    contenido; calendarios (`riskdate`/`newsdate`, cabecera y fila de
+    edición) con `[minDate]="todayDate"` — solo fechas de hoy en adelante
+    son seleccionables. `Probabilidad %` en Riesgos valida rango 0-100 en
+    frontend (`p-inputNumber [min]="0" [max]="100"`) y backend
+    (`RiskService.validateProbability`, 400 si está fuera de rango).
+  - **Schedule Proyecto**: se eliminó la restricción "solo Padre edita
+    Descripción/Descripción larga" — con la Fase 6 alimentando
+    `advrealperc`/`advrealdays` vía Avance Semanal, todos los campos con
+    dato son editables también para nodos Hijo (`ScheduleService.update()`
+    ya no gatea `applyHijoFields(...)` tras un `isPadre` calculado del
+    estado en BD). Fila de edición reescrita a 8 `<td>` explícitos
+    (Descripción, Responsable, Días base, Días adicional, Total días base
+    de solo lectura, Fecha inicio/fin base, acciones) alineados 1:1 con las
+    columnas de cabecera, sin `colspan` ni `*ngIf` de gating; columnas
+    numéricas (`Días base`/`Días adicional`/`Total días base`) alineadas a
+    la derecha (`.num-col`); calendarios con `[minDate]="todayDate"`.
+  - **Solapamiento de títulos/contenido en las tablas del modal de
+    Proyecto**: la causa raíz era `table-layout: fixed` (default de
+    `<p-table>` en PrimeNG) en las 5 tablas del modal que no tenían
+    `responsiveLayout="scroll"` — con columnas de ancho fijo repartido a
+    partes iguales, el texto de columnas angostas (fechas nowrap, números)
+    se desbordaba visualmente sobre la celda vecina. Se agregó
+    `responsiveLayout="scroll"` (fuerza `table-layout: auto` +
+    `overflow-x:auto`) a las 5 tablas (Equipo, Consulta, Schedule, Riesgos,
+    Novedades) más `min-width` explícito en las columnas de texto libre
+    (Descripción/Responsable) para que no queden más angostas que su propio
+    contenido.
+  - **Equipo de Trabajo**: cabecera de alta reorganizada en
+    `.inline-form-grid` (Consultor/Rol/Fecha asignación, cada uno con su
+    label) igual que Riesgos/Novedades; calendario de Fecha asignación con
+    `[minDate]="todayDate"`.
+  - **Validación de rango de fechas (Ejecución Real y Planificación)**:
+    `ProjectService.applyRequest` valida, antes de persistir, que
+    `baseEndDate ≥ baseStartDate`, `plannedEndDate ≥ plannedStartDate` y
+    `realEndDate ≥ realStartDate` (`validateDateOrder(...)`, 400 si se
+    viola); en frontend, `saveHeader()` corre la misma validación antes de
+    llamar al backend (mensaje `messageService.warn` sin llegar a
+    disparar el request) y los `p-calendar` correspondientes usan
+    `[minDate]` calculado con `parseLocalDate`/`minDateOrFloor` (fechas
+    pasadas deshabilitadas en los 3 pares de fecha).
+  - **Planificación y Datos Generales**: campos reorganizados en grid
+    dedicado (`.planning-grid`/`.general-grid`, `minmax(280px, 1fr)` en vez
+    del `.form-grid` genérico de `minmax(220px, 1fr)`, para evitar filas
+    con un único campo huérfano); se agregó botón "Guardar cambios"
+    (`saveHeader()`) a ambas pestañas. En Datos Generales se renombraron
+    las etiquetas `N.º contrato / propuesta`→`Nº. contrato`, `Descripción
+    extendida`→`Descripción del Proyecto`, `Código Project Manager`→
+    `Project Manager`.
+  - **Avance de Proyectos** (`frontend/src/app/progress/`): los eyebrows
+    "Datos Generales"/"Situación General" pasaron de una etiqueta gris
+    chica a una barra de ancho completo (`.info-panel__heading`: fondo
+    `var(--ink)`, texto `var(--signal)` en negrita) para que sobresalgan;
+    se renombraron 6 etiquetas de fecha (`Fecha inicio`→`Fecha Inicio
+    Proyecto`, `Fecha informe`→`Fecha Informe Proyecto`, `Inicio
+    planificado`→`Fecha Inicio Planificado`, `Fin planificado`→`Fecha Fin
+    Planificado`, `Inicio real`→`Fecha Inicio Real`, `Fin real`→`Fecha Fin
+    Real`). La recarga de toda la pantalla en función de la fecha de corte
+    ya estaba implementada correctamente antes de este pedido
+    (`onCutoffChange()` dispara `loadReport()`, que reenvía `cutoffDate` al
+    backend y este filtra riesgos/novedades/cambios y recalcula
+    `reportDate` con ese valor) — no hizo falta cambio de código, solo se
+    verificó end-to-end.
 
 Cada fase se implementa y valida (build + prueba manual en navegador) antes
 de pasar a la siguiente.
