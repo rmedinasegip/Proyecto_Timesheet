@@ -22,16 +22,16 @@ public class PhaseProgressRow {
     private BigDecimal contractedDays;          // Días Contratados (anexo) — schedule.basedays
     private BigDecimal addendumDays;             // Días adicionales aprobados (adendum) — schedule.baseadicional
     private BigDecimal totalProjectDays;         // Total días proyecto — schedule.basedaystotal
-    private BigDecimal expectedAdvanceDays;      // Días avance esperado actual — schedule.advexpecteddays
+    private BigDecimal expectedAdvanceDays;      // Avance esperado (d) (calculado: contractedDays * plannedAssignmentVariationPerc / 100; null si plannedAssignmentVariationPerc es null)
     private BigDecimal realAdvanceDays;          // Días avance real actual — schedule.advrealdays
     private BigDecimal daysToInvest;             // Días por invertir (calculado: totalProjectDays - realAdvanceDays)
     private BigDecimal advanceVariationPerc;     // % Variación avance proyecto (calculado: realAdvancePerc - expectedAdvancePerc)
-    private BigDecimal daysConsumedTs;           // Días Utilizados (según T.S.) — agregado en vivo de tprj_project_timesheet
-    private BigDecimal balanceDaysTs;            // Saldo en días (según T.S.) (calculado: totalProjectDays - daysConsumedTs)
-    private BigDecimal plannedAssignmentVariationPerc; // % Variación asignación planificada — varadvplannedperc
+    private BigDecimal daysConsumedTs;           // Días T.S. (calculado: fecha de corte - project.realStartDate; mismo valor en toda fila, no por fase — null si el proyecto no tiene fecha inicio real)
+    private BigDecimal balanceDaysTs;            // Saldo T.S. (calculado: totalProjectDays - daysConsumedTs; null si daysConsumedTs es null)
+    private BigDecimal plannedAssignmentVariationPerc; // % Var. asig. planif. (calculado: realAdvanceDays / totalProjectDays * 100; null si totalProjectDays es 0)
     private BigDecimal currentAdvancePerc;       // % Avance Actual — advexpectedperc
     private BigDecimal realAdvancePerc;          // % Avance Real — advrealperc
-    private BigDecimal effectivenessPerc;        // % Efectividad — efectivityperc
+    private BigDecimal effectivenessPerc;        // % Efectividad (calculado: realAdvancePerc / plannedAssignmentVariationPerc; null si el denominador es 0/null)
 
     private boolean total;
 }

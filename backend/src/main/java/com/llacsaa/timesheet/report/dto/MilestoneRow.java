@@ -25,10 +25,10 @@ public class MilestoneRow {
     private BigDecimal totalDays;
     private BigDecimal expectedAdvanceDays;
     private BigDecimal realAdvanceDays;
-    private BigDecimal plannedAssignmentVariationPerc;
+    private BigDecimal plannedAssignmentVariationPerc; // % Var. asig. planif. (calculado: realAdvanceDays / totalDays * 100; null si totalDays es 0/null)
     private BigDecimal realAdvancePerc;
-    private BigDecimal effectivenessPerc;
-    private BigDecimal daysConsumedTs;
+    private BigDecimal effectivenessPerc;        // % Efectividad (calculado: realAdvancePerc / plannedAssignmentVariationPerc; null si el denominador es 0/null)
+    private BigDecimal daysConsumedTs; // Días T.S. (calculado: fecha de corte - baseStartDate del hito; null si el hito no tiene fecha inicio base)
 
     private LocalDate baseStartDate;
     private LocalDate baseEndDate;

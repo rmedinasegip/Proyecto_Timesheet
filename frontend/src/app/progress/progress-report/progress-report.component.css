@@ -26,6 +26,40 @@
   flex-direction: column;
   gap: 0.25rem;
   min-width: 160px;
+  position: relative;
+}
+
+/* Sin esto, p-calendar/p-dropdown (elementos custom, no <input> puro) no
+   heredan un ancho definido del flex item que los contiene — quedan del
+   ancho mínimo de su contenido interno (vacío en el caso del calendario sin
+   fecha elegida), angostos y desalineados frente a los demás campos. Mismo
+   patrón ya usado en timesheet-list.component.css/project-form.component.css. */
+.filters .field p-calendar,
+.filters .field p-dropdown {
+  width: 100%;
+}
+
+/* El campo "Descargar Excel" no tiene título propio — sin este label
+   invisible (misma altura que "Proyecto"/"Fecha de corte", solo texto
+   oculto visualmente) el botón quedaba más alto que el dropdown y el
+   calendario: al alinear los 3 campos por su borde inferior
+   (`.filters { align-items: flex-end }`), un campo sin fila de título de
+   menos altura total no alinea su control con los de los campos vecinos. */
+.field-label--hidden {
+  visibility: hidden;
+}
+
+/* El hint de "Fecha de corte" no debe sumar altura al campo — si fuera
+   parte del flujo normal, este campo (label + calendario + hint) queda más
+   alto que "Proyecto" (label + dropdown, sin hint), y el mismo problema de
+   alineación de arriba reaparece para el calendario. Se posiciona debajo
+   del campo sin ocupar espacio en el layout. */
+.filters .field .hint {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.15rem;
+  white-space: nowrap;
 }
 
 .native-date {
@@ -90,9 +124,33 @@ h3 {
   overflow-x: auto;
 }
 
+/* Fila TOTAL de "Días del proyecto por fase": antes solo tenía un fondo gris
+   apenas distinguible y las columnas con <app-gauge> (los % Var./Avance/
+   Efectividad) quedaban con el mismo color fijo que cualquier fila normal
+   — el borde superior en --signal (mismo acento que el subrayado de
+   pestañas y el heading de Avance de Proyectos) y el color de acento en los
+   valores de gauge hacen que todos los valores de la totalizadora resalten
+   igual, sin depender solo del fondo. */
 .total-row {
-  font-weight: bold;
-  background: var(--surface);
+  font-weight: 700;
+  border-top: 2px solid var(--signal);
+}
+
+/* El theme saga-blue fija el fondo con `.p-datatable .p-datatable-tbody >
+   tr` (dos clases) — misma especificidad que un simple `.total-row` pierde
+   contra esa regla. Se iguala la especificidad calcando su propio selector
+   para que el fondo de la fila TOTAL sí gane. */
+::ng-deep .p-datatable-tbody > tr.total-row {
+  background: var(--pine-bg);
+}
+
+.total-row ::ng-deep .gauge__value {
+  font-weight: 700;
+  color: var(--signal);
+}
+
+.total-row ::ng-deep .gauge__unit {
+  color: var(--signal);
 }
 
 .inline-form {

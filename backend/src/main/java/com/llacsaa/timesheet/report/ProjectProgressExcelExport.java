@@ -45,19 +45,19 @@ public final class ProjectProgressExcelExport {
             row = writeKeyValue(sheet, row, boldStyle, "Cliente", report.getCustomerName());
             row = writeKeyValue(sheet, row, boldStyle, "Estado", report.getStatusName());
             row = writeKeyValue(sheet, row, boldStyle, "Líder", report.getLeaderName());
-            row = writeKeyValue(sheet, row, boldStyle, "Fecha inicio", str(report.getStartDate()));
-            row = writeKeyValue(sheet, row, boldStyle, "Fecha informe", str(report.getReportDate()));
-            row = writeKeyValue(sheet, row, boldStyle, "Inicio planificado", str(report.getPlannedStartDate()));
-            row = writeKeyValue(sheet, row, boldStyle, "Fin planificado", str(report.getPlannedEndDate()));
-            row = writeKeyValue(sheet, row, boldStyle, "Inicio real", str(report.getRealStartDate()));
-            row = writeKeyValue(sheet, row, boldStyle, "Fin real", str(report.getRealEndDate()));
+            row = writeKeyValue(sheet, row, boldStyle, "Fecha Inicio Proyecto", str(report.getStartDate()));
+            row = writeKeyValue(sheet, row, boldStyle, "Fecha Informe Proyecto", str(report.getReportDate()));
+            row = writeKeyValue(sheet, row, boldStyle, "Fecha Inicio Planificado", str(report.getPlannedStartDate()));
+            row = writeKeyValue(sheet, row, boldStyle, "Fecha Fin Planificado", str(report.getPlannedEndDate()));
+            row = writeKeyValue(sheet, row, boldStyle, "Fecha Inicio Real", str(report.getRealStartDate()));
+            row = writeKeyValue(sheet, row, boldStyle, "Fecha Fin Real", str(report.getRealEndDate()));
             row++;
 
             row = writeTitle(sheet, row, titleStyle, "Días del proyecto por fase");
             row = writePhaseTable(sheet, row, boldStyle, report.getPhases());
             row++;
 
-            row = writeTitle(sheet, row, titleStyle, "Hitos");
+            row = writeTitle(sheet, row, titleStyle, "Hitos por Fase y Consultor");
             row = writeMilestoneTable(sheet, row, boldStyle, report.getMilestones());
             row++;
 
@@ -130,7 +130,8 @@ public final class ProjectProgressExcelExport {
     private static int writeMilestoneTable(XSSFSheet sheet, int rowIndex, CellStyle boldStyle, List<MilestoneRow> milestones) {
         String[] headers = {
                 "Fase", "Hito", "Responsable", "Días base", "Adendum", "Total",
-                "Inicio base", "Fin base", "% Avance real", "% Efectividad", "Días T.S."
+                "Fecha Inicio Base", "Fecha Fin Base", "% Var. asig. planif.", "% Avance real",
+                "% Efectividad", "Días T.S."
         };
         int r = writeHeaderRow(sheet, rowIndex, boldStyle, headers);
         for (MilestoneRow m : milestones) {
@@ -144,6 +145,7 @@ public final class ProjectProgressExcelExport {
             setNumericCell(row, c++, m.getTotalDays(), null);
             setStringCell(row, c++, str(m.getBaseStartDate()), null);
             setStringCell(row, c++, str(m.getBaseEndDate()), null);
+            setNumericCell(row, c++, m.getPlannedAssignmentVariationPerc(), null);
             setNumericCell(row, c++, m.getRealAdvancePerc(), null);
             setNumericCell(row, c++, m.getEffectivenessPerc(), null);
             setNumericCell(row, c, m.getDaysConsumedTs(), null);

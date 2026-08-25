@@ -16,13 +16,18 @@
     </div>
     <div class="field">
       <label><b>Fecha de corte</b></label>
-      <input type="date" [(ngModel)]="cutoffDate" (change)="onCutoffChange()" class="native-date" />
+      <p-calendar [(ngModel)]="cutoffDateValue" (onSelect)="onCutoffDateSelect()" dateFormat="yy-mm-dd"
+                  [minDate]="minCutoffDate" [appendTo]="'body'" [showIcon]="true" [ngModelOptions]="{standalone: true}"></p-calendar>
+      <span class="hint">Si no se elige, se usa la fecha actual.</span>
     </div>
     <div class="field">
+      <label class="field-label--hidden"><b>&nbsp;</b></label>
       <button pButton type="button" label="Descargar Excel" icon="pi pi-file-excel" [loading]="exporting"
               [disabled]="!report" (click)="downloadExcel()"></button>
     </div>
   </div>
+
+  <p class="hint" *ngIf="loading">Actualizando información…</p>
 
   <ng-container *ngIf="report">
     <!-- Datos generales / Situación general -->
@@ -50,7 +55,7 @@
     <!-- Días del proyecto por fase -->
     <h3>Días del proyecto por fase</h3>
     <div class="table-scroll">
-      <p-table [value]="report.phases" styleClass="p-datatable-sm">
+      <p-table [value]="report.phases" [loading]="loading" styleClass="p-datatable-sm">
         <ng-template pTemplate="header">
           <tr>
             <th>Fase</th><th>Contratados</th><th>Adendum</th><th>Total</th>
@@ -82,13 +87,13 @@
     </div>
 
     <!-- Hitos -->
-    <h3>Hitos</h3>
+    <h3>Hitos por Fase y Consultor</h3>
     <div class="table-scroll">
-      <p-table [value]="report.milestones" styleClass="p-datatable-sm">
+      <p-table [value]="report.milestones" [loading]="loading" styleClass="p-datatable-sm">
         <ng-template pTemplate="header">
           <tr>
             <th>Fase</th><th>Hito</th><th>Responsable</th><th>Días base</th><th>Adendum</th><th>Total</th>
-            <th>Inicio base</th><th>Fin base</th><th>% Avance real</th><th>% Efectividad</th><th>Días T.S.</th>
+            <th>Fecha Inicio Base</th><th>Fecha Fin Base</th><th>% Var. asig. planif.</th><th>% Avance real</th><th>% Efectividad</th><th>Días T.S.</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-row>
@@ -101,19 +106,20 @@
             <td>{{ row.totalDays ?? '—' }}</td>
             <td>{{ row.baseStartDate || '—' }}</td>
             <td>{{ row.baseEndDate || '—' }}</td>
+            <td><app-gauge [value]="row.plannedAssignmentVariationPerc"></app-gauge></td>
             <td><app-gauge [value]="row.realAdvancePerc" [min]="0" [max]="100"></app-gauge></td>
             <td><app-gauge [value]="row.effectivenessPerc" [min]="0" [max]="100"></app-gauge></td>
             <td>{{ row.daysConsumedTs ?? '—' }}</td>
           </tr>
         </ng-template>
-        <ng-template pTemplate="emptymessage"><tr><td colspan="11">Sin hitos registrados.</td></tr></ng-template>
+        <ng-template pTemplate="emptymessage"><tr><td colspan="12">Sin hitos registrados.</td></tr></ng-template>
       </p-table>
     </div>
 
     <!-- Manejo de Riesgos -->
     <h3>Manejo de riesgos</h3>
     <div class="table-scroll">
-      <p-table [value]="report.risks" styleClass="p-datatable-sm">
+      <p-table [value]="report.risks" [loading]="loading" styleClass="p-datatable-sm">
         <ng-template pTemplate="header">
           <tr><th>Fecha</th><th>Tipo impacto</th><th>Descripción</th><th>Responsable</th><th>Compañía</th><th>Solución</th><th>Prob. %</th><th>Estado</th></tr>
         </ng-template>
@@ -136,7 +142,7 @@
     <!-- Novedades Presentadas -->
     <h3>Novedades presentadas</h3>
     <div class="table-scroll">
-      <p-table [value]="report.news" styleClass="p-datatable-sm">
+      <p-table [value]="report.news" [loading]="loading" styleClass="p-datatable-sm">
         <ng-template pTemplate="header">
           <tr><th>Fecha</th><th>Tipo impacto</th><th>Descripción</th><th>Reporta</th><th>Afectación</th><th>Responsable</th><th>Compañía</th><th>Solución</th><th>Estado</th></tr>
         </ng-template>
@@ -157,7 +163,9 @@
       </p-table>
     </div>
 
-    <!-- Cambios Aprobados -->
+    <!-- Cambios Aprobados: deshabilitada temporalmente a pedido del cliente
+         (ver changesSectionEnabled), próximamente se habilita de nuevo. -->
+    <ng-container *ngIf="changesSectionEnabled">
     <h3>Cambios aprobados</h3>
     <div class="inline-form wrap">
       <input type="date" [(ngModel)]="newChange.changedate" [ngModelOptions]="{standalone: true}" class="native-date" placeholder="Fecha" />
@@ -170,7 +178,7 @@
       <button pButton type="button" label="+ Nuevo cambio" icon="pi pi-plus" (click)="addChange()"></button>
     </div>
     <div class="table-scroll">
-      <p-table [value]="report.changes" styleClass="p-datatable-sm">
+      <p-table [value]="report.changes" [loading]="loading" styleClass="p-datatable-sm">
         <ng-template pTemplate="header">
           <tr><th>Fecha</th><th>Fase</th><th>Entregable</th><th>Motivo</th><th>Consecuencia</th><th>Aprobador</th><th>Empresa</th><th>Var. días</th><th>Fecha aplic.</th><th></th></tr>
         </ng-template>
@@ -209,6 +217,7 @@
         <ng-template pTemplate="emptymessage"><tr><td colspan="10">Sin cambios aprobados hasta la fecha de corte.</td></tr></ng-template>
       </p-table>
     </div>
+    </ng-container>
   </ng-container>
 
   <p class="hint" *ngIf="!report && !loading">Seleccione un proyecto para ver su reporte de avance.</p>

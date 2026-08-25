@@ -27,6 +27,11 @@ export class ProgressReportComponent implements OnInit {
   loading = false;
   exporting = false;
 
+  // Sección "Cambios aprobados" deshabilitada a pedido del cliente hasta
+  // nuevo aviso — el resto de la pantalla no depende de esto. Reactivar
+  // cambiando este flag a true.
+  changesSectionEnabled = false;
+
   newChange: ChangeRequest = emptyChangeRequest();
   editingChangeSeq: number | null = null;
   editingChangeForm: ChangeRequest = emptyChangeRequest();
@@ -52,8 +57,49 @@ export class ProgressReportComponent implements OnInit {
     this.loadReport();
   }
 
-  onCutoffChange(): void {
+  /** Fecha de corte con p-calendar (igual al resto de la app) en vez del
+   * `<input type="date">` nativo — cutoffDate sigue siendo la fuente de
+   * verdad como string "yyyy-MM-dd" (formato que ya espera ProgressService).
+   * cutoffDateValue es una propiedad normal (no un getter): un getter que
+   * devuelve `new Date(...)` en cada ciclo de detección de cambios le da a
+   * p-calendar una referencia distinta todo el tiempo, y el componente la
+   * interpreta como "cambió" y se re-renderiza en loop — eso era lo que
+   * colgaba el navegador ("La página no responde") al abrir el calendario.
+   * Con `[(ngModel)]` normal, la referencia solo cambia cuando el usuario
+   * elige una fecha. */
+  cutoffDateValue: Date | null = null;
+
+  onCutoffDateSelect(): void {
+    this.cutoffDate = this.cutoffDateValue ? this.formatLocalDate(this.cutoffDateValue) : null;
     this.loadReport();
+  }
+
+  /** Fecha de corte solo puede elegirse desde la Fecha Inicio Real del
+   * proyecto en adelante — antes de esa fecha el proyecto ni siquiera había
+   * arrancado en la práctica. `[minDate]` es un @Input de solo lectura para
+   * p-calendar (no un ngModel de ida y vuelta como cutoffDateValue), así
+   * que un getter acá es seguro: no dispara el loop de re-render que sí
+   * causaba el getter de cutoffDateValue (ver comentario arriba) porque no
+   * hay ningún ngModelChange/onSelect que vuelva a escribir sobre este
+   * valor. Sin fecha real registrada, no hay piso — se usa una fecha muy
+   * antigua (mismo criterio que project-form.component.ts). */
+  get minCutoffDate(): Date {
+    return this.parseLocalDate(this.report?.realStartDate ?? null) ?? new Date(1900, 0, 1);
+  }
+
+  private parseLocalDate(value: string | null): Date | null {
+    if (!value) {
+      return null;
+    }
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  private formatLocalDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   loadReport(): void {

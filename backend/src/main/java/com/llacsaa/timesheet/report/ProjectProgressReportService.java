@@ -16,8 +16,6 @@ import com.llacsaa.timesheet.risk.RiskView;
 import com.llacsaa.timesheet.risk.TprjProjectRisk;
 import com.llacsaa.timesheet.schedule.ScheduleRepository;
 import com.llacsaa.timesheet.schedule.TprjProjectSchedule;
-import com.llacsaa.timesheet.timesheet.TimesheetRepository;
-import com.llacsaa.timesheet.timesheet.TprjProjectTimesheet;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,9 +23,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -45,24 +43,51 @@ import java.util.stream.Collectors;
  *     propia fila Padre no trae el valor: leer directo la columna del
  *     Padre (siempre null en la práctica) dejaría esta sección del
  *     reporte vacía para cualquier proyecto real.
- *   - "Días Utilizados (según T.S.)" no es una columna almacenada: se agrega
- *     en vivo sumando tprj_project_timesheet.hoursconsumed de los registros
- *     vinculados a esa fase (su propio seqschedule + el de sus hijos) y
- *     dividiendo entre HOURS_PER_DAY (8, jornada estándar — no hay
- *     documento que fije este valor, se asume igual que se asumieron los
- *     campos de Fase 3 sin documento CRUD dedicado).
+ *   - "Días T.S." (daysConsumedTs) no es una columna almacenada en ninguna de
+ *     las dos secciones: se calcula como fecha de corte - una fecha de
+ *     inicio (ver {@link #daysConsumedFromCutoff}), no sumando horas de
+ *     tprj_project_timesheet como en versiones anteriores de este reporte.
+ *     En "Días del proyecto por fase" es fecha de corte - fecha inicio real
+ *     del proyecto (tprj_project.realStartDate) — un único valor a nivel de
+ *     proyecto, igual en cada fila de fase y en la fila TOTAL (no tendría
+ *     sentido sumarlo entre fases). En "Hitos" es fecha de corte - fecha
+ *     inicio base del propio hito (schedule.baseStartDate) — cada hito tiene
+ *     su propia fecha de inicio, a diferencia de la fase.
  *   - "% Variación avance proyecto" tampoco es una columna almacenada: se
  *     calcula advrealperc - advexpectedperc (varianza entre lo real y lo
- *     esperado), distinto de "% Variación asignación planificada" que sí
- *     tiene su propia columna (varadvplannedperc).
+ *     esperado).
+ *   - "% Var. asig. planif." (varadvplannedperc) tampoco se lee de columna
+ *     almacenada (ese campo nunca se alimenta desde ningún módulo) — se
+ *     calcula en vivo como (Avance real (d) / Total) x 100, redondeado a 2
+ *     decimales; si Total es cero o nulo, se deja en null (el gauge del
+ *     frontend lo muestra como "—" en vez de una división inválida).
+ *   - "Avance esperado (d)" (advexpecteddays) tampoco se lee de columna
+ *     almacenada por el mismo motivo — se calcula en vivo como Contratados
+ *     x (% Var. asig. planif. / 100); si este último es null (Total en
+ *     cero, ver el punto anterior), también queda null en vez de propagar
+ *     una multiplicación inválida.
+ *   - "% Efectividad" (efectivityperc) tampoco se lee de columna almacenada
+ *     por el mismo motivo — se calcula en vivo como % Avance real / % Var.
+ *     asig. planif. (cociente directo, sin reescalar a porcentaje), mismo
+ *     criterio de null que el punto anterior cuando el denominador es cero
+ *     o nulo.
  *   - Fila TOTAL: los campos de "días" sí se suman entre fases (Suma real de
- *     lo comprometido/consumido); los campos de "%" se toman directo de
- *     tprj_project (el snapshot de avance a nivel de proyecto registrado vía
- *     "Registrar avance" — ver ProjectService#registerProgress), no un
- *     promedio de las fases, porque esos campos existen justamente para
- *     representar el avance global tal como lo evalúa el PM.
+ *     lo comprometido/consumido). "% Var. asig. planif." se recalcula igual
+ *     que en cada fase, a partir de los totales ya sumados de la fila
+ *     TOTAL. Ninguna de las demás columnas de % de la fila TOTAL ("% Var.
+ *     avance", "% Avance actual", "% Avance real", "% Efectividad") se lee
+ *     de tprj_project — esas columnas de cabecera (advexpectedperc/
+ *     advrealperc/efectivityperc) pueden seguir sin registrar aunque las
+ *     fases sí tengan datos, lo que antes daba 0/"—" incorrectamente: en
+ *     vez de eso se toma el promedio ({@link #averagePercent}) del valor
+ *     ya calculado en cada fase, ignorando las que dieran null.
  *   - "Hitos": actividades "Hijo" (memberuser no nulo), agrupadas por su
- *     fase padre, con las mismas métricas.
+ *     fase padre, con las mismas métricas. A diferencia de las fases (que
+ *     agregan/promedian entre sus hijas), acá "% Var. asig. planif." y
+ *     "% Efectividad" se calculan directo sobre los propios
+ *     advrealdays/basedaystotal/advrealperc del hito — son justamente los
+ *     nodos "Hijo" que alimenta Avance Semanal (Fase 6), así que ya traen
+ *     dato real sin necesidad de agregación.
  *   - Riesgos/Novedades/Cambios Aprobados se filtran por su propia fecha
  *     <= fecha de corte del reporte (fechaInforme) — la única semántica
  *     razonable de "reporte de avance a una fecha de corte" para listas que
@@ -71,11 +96,8 @@ import java.util.stream.Collectors;
 @Service
 public class ProjectProgressReportService {
 
-    private static final BigDecimal HOURS_PER_DAY = BigDecimal.valueOf(8);
-
     private final ProjectRepository projectRepository;
     private final ScheduleRepository scheduleRepository;
-    private final TimesheetRepository timesheetRepository;
     private final RiskRepository riskRepository;
     private final NewsRepository newsRepository;
     private final ChangeRepository changeRepository;
@@ -83,14 +105,12 @@ public class ProjectProgressReportService {
 
     public ProjectProgressReportService(ProjectRepository projectRepository,
                                          ScheduleRepository scheduleRepository,
-                                         TimesheetRepository timesheetRepository,
                                          RiskRepository riskRepository,
                                          NewsRepository newsRepository,
                                          ChangeRepository changeRepository,
                                          NameResolver nameResolver) {
         this.projectRepository = projectRepository;
         this.scheduleRepository = scheduleRepository;
-        this.timesheetRepository = timesheetRepository;
         this.riskRepository = riskRepository;
         this.newsRepository = newsRepository;
         this.changeRepository = changeRepository;
@@ -110,19 +130,16 @@ public class ProjectProgressReportService {
                 .filter(s -> s.getMemberuser() != null)
                 .collect(Collectors.toList());
 
-        List<TprjProjectTimesheet> timesheets = timesheetRepository.findBySeqproject(seqproject);
-        Map<Long, List<TprjProjectTimesheet>> timesheetsBySchedule = timesheets.stream()
-                .filter(t -> t.getSeqschedule() != null)
-                .collect(Collectors.groupingBy(TprjProjectTimesheet::getSeqschedule));
+        BigDecimal daysConsumedTs = daysConsumedFromCutoff(project.getRealStartDate(), reportDate);
 
         List<PhaseProgressRow> phases = phaseRows.stream()
-                .map(phase -> toPhaseRow(phase, milestoneRows, timesheetsBySchedule))
+                .map(phase -> toPhaseRow(phase, milestoneRows, daysConsumedTs))
                 .collect(Collectors.toList());
-        phases.add(totalRow(project, phases));
+        phases.add(totalRow(phases, daysConsumedTs));
 
         List<MilestoneRow> milestones = milestoneRows.stream()
                 .sorted(Comparator.comparing(TprjProjectSchedule::getSeqschedule))
-                .map(m -> toMilestoneRow(m, phaseRows, timesheetsBySchedule))
+                .map(m -> toMilestoneRow(m, phaseRows, reportDate))
                 .collect(Collectors.toList());
 
         List<RiskView> risks = riskRepository.findBySeqprojectOrderByRiskdateDesc(seqproject).stream()
@@ -161,27 +178,26 @@ public class ProjectProgressReportService {
     }
 
     private PhaseProgressRow toPhaseRow(TprjProjectSchedule phase, List<TprjProjectSchedule> milestoneRows,
-                                         Map<Long, List<TprjProjectTimesheet>> timesheetsBySchedule) {
+                                         BigDecimal daysConsumedTs) {
         List<TprjProjectSchedule> children = milestoneRows.stream()
                 .filter(m -> phase.getSeqschedule().equals(m.getSeqscheduleparent()))
                 .collect(Collectors.toList());
-        List<Long> childSeqs = children.stream().map(TprjProjectSchedule::getSeqschedule).collect(Collectors.toList());
 
         BigDecimal contractedDays = ownOrSumChildren(phase.getBasedays(), children, TprjProjectSchedule::getBasedays);
         BigDecimal addendumDays = ownOrSumChildren(phase.getBaseadicional(), children, TprjProjectSchedule::getBaseadicional);
         BigDecimal totalProjectDays = ownOrSumChildren(phase.getBasedaystotal(), children, TprjProjectSchedule::getBasedaystotal);
-        BigDecimal expectedAdvanceDays = ownOrSumChildren(phase.getAdvexpecteddays(), children, TprjProjectSchedule::getAdvexpecteddays);
         BigDecimal realAdvanceDays = ownOrSumChildren(phase.getAdvrealdays(), children, TprjProjectSchedule::getAdvrealdays);
         BigDecimal expectedPerc = ownOrAvgChildren(phase.getAdvexpectedperc(), children, TprjProjectSchedule::getAdvexpectedperc);
         BigDecimal realPerc = ownOrAvgChildren(phase.getAdvrealperc(), children, TprjProjectSchedule::getAdvrealperc);
-        BigDecimal plannedAssignmentVariationPerc = ownOrAvgChildren(phase.getVaradvplannedperc(), children, TprjProjectSchedule::getVaradvplannedperc);
-        BigDecimal effectivenessPerc = ownOrAvgChildren(phase.getEfectivityperc(), children, TprjProjectSchedule::getEfectivityperc);
 
         BigDecimal daysToInvest = totalProjectDays.subtract(realAdvanceDays);
         BigDecimal advanceVariation = realPerc.subtract(expectedPerc);
 
-        BigDecimal daysConsumedTs = sumDaysConsumed(timesheetsBySchedule, phase.getSeqschedule(), childSeqs);
-        BigDecimal balanceDaysTs = totalProjectDays.subtract(daysConsumedTs);
+        BigDecimal balanceDaysTs = daysConsumedTs != null ? totalProjectDays.subtract(daysConsumedTs) : null;
+
+        BigDecimal plannedAssignmentVariationPerc = plannedAssignmentVariation(realAdvanceDays, totalProjectDays);
+        BigDecimal effectivenessPerc = effectiveness(realPerc, plannedAssignmentVariationPerc);
+        BigDecimal expectedAdvanceDays = expectedAdvanceDays(contractedDays, plannedAssignmentVariationPerc);
 
         return new PhaseProgressRow(
                 phase.getSeqschedule(),
@@ -201,6 +217,101 @@ public class ProjectProgressReportService {
                 effectivenessPerc,
                 false
         );
+    }
+
+    /**
+     * % Var. asig. planif. = (Avance real (d) / Total) x 100. Se recalcula
+     * en cada lectura del reporte a partir de las columnas de días ya
+     * mostradas en la misma fila, para que quede consistente si alguna de
+     * las dos cambia. Total en cero/nulo no es un caso de error de negocio
+     * (una fase sin días asignados todavía) — se devuelve null para que el
+     * gauge del frontend lo pinte como "—" en vez de dividir por cero.
+     */
+    private BigDecimal plannedAssignmentVariation(BigDecimal realAdvanceDays, BigDecimal totalProjectDays) {
+        if (totalProjectDays == null || totalProjectDays.compareTo(BigDecimal.ZERO) == 0) {
+            return null;
+        }
+        return nz(realAdvanceDays)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(totalProjectDays, 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * % Efectividad = % Avance real / % Var. asig. planif. — cociente
+     * directo, sin reescalar a porcentaje (ajustado a pedido explícito,
+     * distinto del criterio de {@link #plannedAssignmentVariation}).
+     * Denominador nulo o cero (fase sin días asignados, ver
+     * {@link #plannedAssignmentVariation}) devuelve null en vez de dividir
+     * por cero.
+     */
+    private BigDecimal effectiveness(BigDecimal realPerc, BigDecimal plannedAssignmentVariationPerc) {
+        if (plannedAssignmentVariationPerc == null || plannedAssignmentVariationPerc.compareTo(BigDecimal.ZERO) == 0) {
+            return null;
+        }
+        return nz(realPerc).divide(plannedAssignmentVariationPerc, 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Avance esperado (d) = Contratados x (% Var. asig. planif. / 100).
+     * Antes se leía de schedule.advexpecteddays, otra columna que ningún
+     * módulo alimenta. Si Contratados o % Var. asig. planif. vienen null
+     * (este último ya devuelve null cuando Total es cero, ver
+     * {@link #plannedAssignmentVariation}), el resultado también es null en
+     * vez de una multiplicación inválida; Contratados en cero es un caso
+     * normal (fase sin días contratados) y simplemente da 0, sin necesidad
+     * de un guard aparte.
+     */
+    private BigDecimal expectedAdvanceDays(BigDecimal contractedDays, BigDecimal plannedAssignmentVariationPerc) {
+        if (contractedDays == null || plannedAssignmentVariationPerc == null) {
+            return null;
+        }
+        return contractedDays
+                .multiply(plannedAssignmentVariationPerc)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Días T.S. (sección "Días del proyecto por fase") = Fecha de corte -
+     * Fecha inicio real del proyecto. Es un valor a nivel de proyecto (no
+     * por fase, a diferencia de Contratados/Total/etc.), así que se calcula
+     * una sola vez en {@link #getReport} y se reutiliza igual en cada fila
+     * de fase y en la fila TOTAL — no tiene sentido sumarlo entre fases,
+     * daría un múltiplo del valor real. Reemplaza el cálculo anterior
+     * (suma de tprj_project_timesheet.hoursconsumed / 8), que sigue
+     * vigente sin cambios para la sección "Hitos" (ver
+     * {@link #toMilestoneRow}/{@link #sumDaysConsumed}), fuera del alcance
+     * de este ajuste. Si el proyecto no tiene Fecha inicio real registrada,
+     * devuelve null en vez de una resta inválida (el gauge/celda del
+     * frontend ya lo muestra como "—").
+     */
+    private BigDecimal daysConsumedFromCutoff(LocalDate realStartDate, LocalDate reportDate) {
+        if (realStartDate == null || reportDate == null) {
+            return null;
+        }
+        return BigDecimal.valueOf(ChronoUnit.DAYS.between(realStartDate, reportDate));
+    }
+
+    /**
+     * Promedia una columna de % ya calculada en cada fila de fase, para la
+     * fila TOTAL — en vez de leerla de una columna de cabecera de
+     * tprj_project que puede seguir sin registrar aunque las fases sí
+     * tengan datos (ver usos en {@link #totalRow}, antes daba 0/"—"
+     * incorrectamente en ese caso). Filas con el valor en null (sin datos,
+     * o denominador en cero en el cálculo de esa fase) se excluyen del
+     * promedio en vez de contar como cero; si ninguna fase tiene un valor
+     * calculable, el TOTAL también queda en null.
+     */
+    private BigDecimal averagePercent(List<PhaseProgressRow> phaseRows,
+                                       java.util.function.Function<PhaseProgressRow, BigDecimal> extractor) {
+        List<BigDecimal> values = phaseRows.stream()
+                .map(extractor)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+        if (values.isEmpty()) {
+            return null;
+        }
+        BigDecimal total = values.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        return total.divide(BigDecimal.valueOf(values.size()), 2, RoundingMode.HALF_UP);
     }
 
     /** Si la fila "Padre" trae el valor, se usa; si no (el caso normal, ver ScheduleService), se suma entre sus hijas. */
@@ -226,19 +337,19 @@ public class ProjectProgressReportService {
         return total.divide(BigDecimal.valueOf(values.size()), 2, RoundingMode.HALF_UP);
     }
 
-    private PhaseProgressRow totalRow(TprjProject project, List<PhaseProgressRow> phaseRows) {
+    private PhaseProgressRow totalRow(List<PhaseProgressRow> phaseRows, BigDecimal daysConsumedTs) {
         BigDecimal totalContracted = sum(phaseRows, PhaseProgressRow::getContractedDays);
         BigDecimal totalAddendum = sum(phaseRows, PhaseProgressRow::getAddendumDays);
         BigDecimal totalProjectDays = sum(phaseRows, PhaseProgressRow::getTotalProjectDays);
-        BigDecimal totalExpectedDays = sum(phaseRows, PhaseProgressRow::getExpectedAdvanceDays);
         BigDecimal totalRealDays = sum(phaseRows, PhaseProgressRow::getRealAdvanceDays);
         BigDecimal totalDaysToInvest = sum(phaseRows, PhaseProgressRow::getDaysToInvest);
-        BigDecimal totalDaysConsumedTs = sum(phaseRows, PhaseProgressRow::getDaysConsumedTs);
-        BigDecimal totalBalanceDaysTs = sum(phaseRows, PhaseProgressRow::getBalanceDaysTs);
+        BigDecimal totalBalanceDaysTs = daysConsumedTs != null ? totalProjectDays.subtract(daysConsumedTs) : null;
 
-        BigDecimal expectedPerc = nz(project.getAdvexpectedperc());
-        BigDecimal realPerc = nz(project.getAdvrealperc());
-        BigDecimal advanceVariation = realPerc.subtract(expectedPerc);
+        BigDecimal plannedAssignmentVariationPerc = plannedAssignmentVariation(totalRealDays, totalProjectDays);
+        BigDecimal totalExpectedDays = expectedAdvanceDays(totalContracted, plannedAssignmentVariationPerc);
+        BigDecimal averageAdvanceVariationPerc = averagePercent(phaseRows, PhaseProgressRow::getAdvanceVariationPerc);
+        BigDecimal averageCurrentAdvancePerc = averagePercent(phaseRows, PhaseProgressRow::getCurrentAdvancePerc);
+        BigDecimal averageRealAdvancePerc = averagePercent(phaseRows, PhaseProgressRow::getRealAdvancePerc);
 
         return new PhaseProgressRow(
                 null,
@@ -249,25 +360,28 @@ public class ProjectProgressReportService {
                 totalExpectedDays,
                 totalRealDays,
                 totalDaysToInvest,
-                advanceVariation,
-                totalDaysConsumedTs,
+                averageAdvanceVariationPerc,
+                daysConsumedTs,
                 totalBalanceDaysTs,
-                project.getVaradvplannedperc(),
-                project.getAdvexpectedperc(),
-                project.getAdvrealperc(),
-                project.getEfectivityperc(),
+                plannedAssignmentVariationPerc,
+                averageCurrentAdvancePerc,
+                averageRealAdvancePerc,
+                averagePercent(phaseRows, PhaseProgressRow::getEffectivenessPerc),
                 true
         );
     }
 
     private MilestoneRow toMilestoneRow(TprjProjectSchedule milestone, List<TprjProjectSchedule> phaseRows,
-                                         Map<Long, List<TprjProjectTimesheet>> timesheetsBySchedule) {
+                                         LocalDate reportDate) {
         String parentDescription = phaseRows.stream()
                 .filter(p -> p.getSeqschedule().equals(milestone.getSeqscheduleparent()))
                 .findFirst()
                 .map(TprjProjectSchedule::getShortactivitydesc)
                 .orElse(null);
-        BigDecimal daysConsumedTs = sumDaysConsumed(timesheetsBySchedule, milestone.getSeqschedule(), List.of());
+        BigDecimal daysConsumedTs = daysConsumedFromCutoff(milestone.getBaseStartDate(), reportDate);
+
+        BigDecimal plannedAssignmentVariationPerc = plannedAssignmentVariation(milestone.getAdvrealdays(), milestone.getBasedaystotal());
+        BigDecimal effectivenessPerc = effectiveness(milestone.getAdvrealperc(), plannedAssignmentVariationPerc);
 
         return new MilestoneRow(
                 milestone.getSeqschedule(),
@@ -280,29 +394,13 @@ public class ProjectProgressReportService {
                 milestone.getBasedaystotal(),
                 milestone.getAdvexpecteddays(),
                 milestone.getAdvrealdays(),
-                milestone.getVaradvplannedperc(),
+                plannedAssignmentVariationPerc,
                 milestone.getAdvrealperc(),
-                milestone.getEfectivityperc(),
+                effectivenessPerc,
                 daysConsumedTs,
                 milestone.getBaseStartDate(),
                 milestone.getBaseEndDate()
         );
-    }
-
-    private BigDecimal sumDaysConsumed(Map<Long, List<TprjProjectTimesheet>> timesheetsBySchedule,
-                                        Long seqschedule, List<Long> childSeqs) {
-        BigDecimal totalHours = BigDecimal.ZERO;
-        for (Long seq : concat(seqschedule, childSeqs)) {
-            for (TprjProjectTimesheet t : timesheetsBySchedule.getOrDefault(seq, List.of())) {
-                totalHours = totalHours.add(nz(t.getHoursconsumed()));
-            }
-        }
-        return totalHours.divide(HOURS_PER_DAY, 2, RoundingMode.HALF_UP);
-    }
-
-    private List<Long> concat(Long seq, List<Long> others) {
-        return java.util.stream.Stream.concat(java.util.stream.Stream.of(seq), others.stream())
-                .collect(Collectors.toList());
     }
 
     private BigDecimal sum(List<PhaseProgressRow> rows, java.util.function.Function<PhaseProgressRow, BigDecimal> extractor) {

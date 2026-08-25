@@ -347,5 +347,77 @@ posteriores (6+) son módulos nuevos pedidos fuera de ese roadmap original.
     `reportDate` con ese valor) — no hizo falta cambio de código, solo se
     verificó end-to-end.
 
+- ✅ **Fase 8** (cálculos del reporte de Avance de Proyectos y pulido de su
+  cabecera) — pedidos puntuales sobre `report/ProjectProgressReportService.java`
+  y `frontend/src/app/progress/`, todos con el mismo patrón: varias columnas
+  de "Días del proyecto por fase"/"Hitos" leían columnas de
+  `tprj_project_schedule`/`tprj_project` que ningún módulo alimenta
+  (`advexpecteddays`, `varadvplannedperc`, `efectivityperc`) — se reemplazaron
+  por cálculos en vivo a partir de columnas que sí tienen dato real, con
+  `null` (no 0) cuando el denominador es cero/no aplica, para que el gauge
+  del frontend lo muestre como "—" en vez de un valor engañoso:
+  - **% Var. asig. planif.** = `Avance real (d) / Total x 100`
+    (`plannedAssignmentVariation(...)`).
+  - **% Efectividad** = `% Avance real / % Var. asig. planif.` (cociente
+    directo, **sin** reescalar a porcentaje — corregido a pedido explícito
+    tras una primera versión con `x 100`) (`effectiveness(...)`).
+  - **Avance esperado (d)** = `Contratados x (% Var. asig. planif. / 100)`
+    (`expectedAdvanceDays(...)`).
+  - **Días T.S.** ya no suma `tprj_project_timesheet.hoursconsumed / 8`
+    (`sumDaysConsumed`/`HOURS_PER_DAY`/`TimesheetRepository` eliminados de
+    esta clase, quedaron sin otro uso) — ahora es una resta de fechas
+    (`daysConsumedFromCutoff(...)`): en "Días del proyecto por fase",
+    `Fecha de corte - tprj_project.realStartDate` (un único valor de
+    proyecto, igual en cada fila y en TOTAL); en "Hitos", `Fecha de corte -
+    schedule.baseStartDate` del propio hito (cada hito tiene su propia
+    fecha, a diferencia de la fase) — puede dar negativo si el hito todavía
+    no arranca a esa fecha de corte, es el resultado correcto.
+  - **Fila TOTAL**: `% Var. asig. planif.` se recalcula con la misma fórmula
+    sobre los totales ya sumados; `% Var. avance`, `% Avance actual`, `%
+    Avance real` y `% Efectividad` ya NO se leen de `tprj_project` (daban
+    0/"—" aunque las fases tuvieran datos) — se promedian
+    (`averagePercent(...)`) los valores ya calculados en cada fila de fase,
+    ignorando las que dieran `null`. De paso se resaltó visualmente la fila
+    TOTAL (borde superior y valores de gauge en `--signal`, fondo
+    `--pine-bg` — hubo que igualar la especificidad de
+    `.p-datatable .p-datatable-tbody > tr` del theme `saga-blue` para que el
+    fondo propio ganara).
+  - **Hitos por Fase y Consultor** (renombrado desde "Hitos"): mismas dos
+    fórmulas (`% Var. asig. planif.`/`% Efectividad`) aplicadas directo
+    sobre `advrealdays`/`basedaystotal`/`advrealperc` del propio hito (son
+    los nodos "Hijo" que alimenta Avance Semanal, ya traen dato real sin
+    agregación) — se agregó la columna `% Var. asig. planif.` a la grilla y
+    al Excel; etiquetas `Inicio base`/`Fin base` → `Fecha Inicio Base`/
+    `Fecha Fin Base` (grilla y Excel).
+  - **Sección "Cambios aprobados"**: deshabilitada temporalmente a pedido
+    del cliente vía el flag `changesSectionEnabled = false` en
+    `progress-report.component.ts` (todo el bloque envuelto en
+    `<ng-container *ngIf="changesSectionEnabled">` en el HTML) — sin borrar
+    lógica ni marcado, reactivar es cambiar ese único flag a `true`.
+  - **Cabecera de la pantalla**: "Fecha de corte" pasó del `<input
+    type="date">` nativo a `p-calendar` (igual al resto de la app), con
+    `[minDate]` = Fecha Inicio Real del proyecto elegido; se agregó
+    indicador de carga (`[loading]="loading"` en las 5 tablas + texto
+    "Actualizando información…") y un hint bajo el campo ("Si no se elige,
+    se usa la fecha actual."). **Bug crítico encontrado y corregido**: la
+    primera versión usaba un *getter* `cutoffDateValue` que devolvía `new
+    Date(...)` en cada ciclo de detección de cambios — `p-calendar` recibía
+    una referencia distinta todo el tiempo, la interpretaba como "cambió" y
+    entraba en loop de re-render, colgando el navegador ("La página no
+    responde") al abrir el calendario. Se corrigió con una propiedad normal
+    (`cutoffDateValue: Date | null`) actualizada solo vía `[(ngModel)]` +
+    `(onSelect)` (mismo patrón ya usado en `weekly-progress-list`) — un
+    *getter* sigue siendo seguro para `[minDate]` porque ese input no tiene
+    ningún evento que vuelva a escribirlo (no hay ciclo de realimentación).
+    Alineación de los 3 campos de la cabecera corregida agregando
+    `width:100%` a `p-calendar`/`p-dropdown`, un `<label>` invisible en el
+    campo del botón "Descargar Excel" (para igualar la altura con los
+    campos que sí tienen label) y el hint posicionado `absolute` (para que
+    no sume alto al campo y desalinee su control).
+  - **Excel** (`ProjectProgressExcelExport.java`): etiquetas de cabecera
+    sincronizadas con los renombres de Fase 7 (`Fecha inicio`→`Fecha Inicio
+    Proyecto`, etc.) y título de sección `Hitos`→`Hitos por Fase y
+    Consultor`.
+
 Cada fase se implementa y valida (build + prueba manual en navegador) antes
 de pasar a la siguiente.
