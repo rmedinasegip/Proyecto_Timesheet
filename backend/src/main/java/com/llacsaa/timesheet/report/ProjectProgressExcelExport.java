@@ -1,6 +1,5 @@
 package com.llacsaa.timesheet.report;
 
-import com.llacsaa.timesheet.change.ChangeView;
 import com.llacsaa.timesheet.news.NewsView;
 import com.llacsaa.timesheet.report.dto.MilestoneRow;
 import com.llacsaa.timesheet.report.dto.PhaseProgressRow;
@@ -25,7 +24,9 @@ import java.util.List;
  * reportes" del roadmap) — mismas secciones que la vista Angular
  * (ProgressReportComponent), en el mismo orden: datos generales/situación
  * general, días del proyecto por fase (con fila TOTAL en negrita), hitos,
- * riesgos, novedades, cambios aprobados.
+ * riesgos, novedades. La sección "Cambios aprobados" está deshabilitada en
+ * pantalla ({@code changesSectionEnabled = false} en
+ * progress-report.component.ts) y se excluye también aquí por consistencia.
  */
 public final class ProjectProgressExcelExport {
 
@@ -66,11 +67,7 @@ public final class ProjectProgressExcelExport {
             row++;
 
             row = writeTitle(sheet, row, titleStyle, "Novedades presentadas");
-            row = writeNewsTable(sheet, row, boldStyle, report.getNews());
-            row++;
-
-            row = writeTitle(sheet, row, titleStyle, "Cambios aprobados");
-            writeChangeTable(sheet, row, boldStyle, report.getChanges());
+            writeNewsTable(sheet, row, boldStyle, report.getNews());
 
             for (int c = 0; c < 15; c++) {
                 sheet.autoSizeColumn(c);
@@ -186,25 +183,6 @@ public final class ProjectProgressExcelExport {
             setStringCell(row, c++, n.getCompany(), null);
             setStringCell(row, c++, n.getSolution(), null);
             setStringCell(row, c, n.getNewstatusName(), null);
-        }
-        return r;
-    }
-
-    private static int writeChangeTable(XSSFSheet sheet, int rowIndex, CellStyle boldStyle, List<ChangeView> changes) {
-        String[] headers = {"Fecha", "Fase", "Entregable", "Motivo", "Consecuencia", "Aprobador", "Empresa", "Var. días", "Fecha aplic."};
-        int r = writeHeaderRow(sheet, rowIndex, boldStyle, headers);
-        for (ChangeView ch : changes) {
-            Row row = sheet.createRow(r++);
-            int c = 0;
-            setStringCell(row, c++, str(ch.getChangedate()), null);
-            setStringCell(row, c++, ch.getPhase(), null);
-            setStringCell(row, c++, ch.getDeliverable(), null);
-            setStringCell(row, c++, ch.getReason(), null);
-            setStringCell(row, c++, ch.getConsequence(), null);
-            setStringCell(row, c++, ch.getApprovedby(), null);
-            setStringCell(row, c++, ch.getCompany(), null);
-            setNumericCell(row, c++, ch.getDaysvariation(), null);
-            setStringCell(row, c, str(ch.getPlannedapplydate()), null);
         }
         return r;
     }
