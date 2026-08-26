@@ -31,6 +31,11 @@
                   [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
     </div>
     <div class="field">
+      <label><b>Project Manager</b></label>
+      <p-dropdown [appendTo]="'body'" [options]="pmOptions" optionLabel="name" optionValue="code" [(ngModel)]="pmFilter"
+                  (onChange)="applyPmFilter()" [showClear]="true" placeholder="Todos" [filter]="true"></p-dropdown>
+    </div>
+    <div class="field">
       <label><b>Estado</b></label>
       <p-dropdown [appendTo]="'body'" [options]="statusItems" optionLabel="name" optionValue="id.codeitem" [(ngModel)]="filters.status"
                   [showClear]="true" placeholder="Todos"></p-dropdown>
@@ -46,13 +51,14 @@
   </div>
 
   <div class="table-scroll">
-  <p-table [value]="entries" [loading]="loading" [paginator]="true" [rows]="10"
+  <p-table [value]="filteredEntries" [loading]="loading" [paginator]="true" [rows]="10"
            responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-striped">
     <ng-template pTemplate="header">
       <tr>
         <th>Empresa</th>
         <th>Cliente</th>
         <th>Proyecto / Incidencia</th>
+        <th>Project Manager</th>
         <th>Sistema</th>
         <th>Módulo</th>
         <th>Sprint</th>
@@ -72,6 +78,7 @@
         <td>{{ entry.codecompanyconsultantName }}</td>
         <td>{{ entry.customerName }}</td>
         <td>{{ entry.projectName || entry.incidentref || '—' }}</td>
+        <td>{{ pmNameFor(entry) }}</td>
         <td>{{ entry.systemName }}</td>
         <td>{{ entry.moduleName }}</td>
         <td>{{ entry.sprint || '—' }}</td>
@@ -98,7 +105,7 @@
       </tr>
     </ng-template>
     <ng-template pTemplate="emptymessage">
-      <tr><td colspan="15">No hay registros para los filtros seleccionados.</td></tr>
+      <tr><td colspan="16">No hay registros para los filtros seleccionados.</td></tr>
     </ng-template>
   </p-table>
   </div>

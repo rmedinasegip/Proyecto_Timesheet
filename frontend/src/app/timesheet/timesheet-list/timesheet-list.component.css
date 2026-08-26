@@ -73,12 +73,15 @@
   overflow-x: auto;
 }
 
-/* La grilla tiene 15 columnas angostas de contenido corto y formato fijo
+/* La grilla tiene 16 columnas angostas de contenido corto y formato fijo
    (fechas, horas, nombres) — sin esto, el layout de tabla las comprime por
    debajo de su ancho natural y el texto se parte a mitad de palabra (ver
    "Fecha" en el reporte del usuario). Se fuerza una sola línea por celda y
    se deja crecer el ancho total de la tabla (scrollable), salvo la columna
-   Descripción (8), que sí es texto libre y puede ocupar varias líneas.  */
+   Descripción (9: Empresa/Cliente/Proyecto/Project Manager/Sistema/Módulo/
+   Sprint/Tipo actividad la preceden), que sí es texto libre — se achica con
+   un max-width y se fuerza el wrap a varias líneas en vez de una sola línea
+   ancha. */
 /* ::ng-deep: <thead>/<tbody> son renderizados por el propio componente
    p-table de PrimeNG, no por el template de este componente, así que no
    llevan el atributo de encapsulación de este archivo — sin ::ng-deep el
@@ -88,10 +91,12 @@
   white-space: nowrap;
 }
 
-.table-scroll ::ng-deep .p-datatable-thead > tr > th:nth-child(8),
-.table-scroll ::ng-deep .p-datatable-tbody > tr > td:nth-child(8) {
+.table-scroll ::ng-deep .p-datatable-thead > tr > th:nth-child(9),
+.table-scroll ::ng-deep .p-datatable-tbody > tr > td:nth-child(9) {
   white-space: normal;
-  min-width: 180px;
+  min-width: 150px;
+  max-width: 200px;
+  word-break: break-word;
 }
 
 .form-grid {

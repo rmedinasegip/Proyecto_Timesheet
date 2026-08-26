@@ -28,11 +28,14 @@ function emptyRequest(): TimesheetRequest {
 })
 export class TimesheetListComponent implements OnInit {
   entries: TimesheetView[] = [];
+  filteredEntries: TimesheetView[] = [];
   loading = false;
 
   filters: TimesheetFilters = emptyFilters();
+  pmFilter: number | null = null;
 
   users: UserOption[] = [];
+  pmOptions: UserOption[] = [];
   customers: Customer[] = [];
   companies: Company[] = [];
   projects: ProjectListItem[] = [];
@@ -58,7 +61,10 @@ export class TimesheetListComponent implements OnInit {
     this.catalogService.getUsers().subscribe((data) => (this.users = data));
     this.catalogService.getCustomers().subscribe((data) => (this.customers = data));
     this.catalogService.getCompanies().subscribe((data) => (this.companies = data));
-    this.projectService.list().subscribe((data) => (this.projects = data));
+    this.projectService.list().subscribe((data) => {
+      this.projects = data;
+      this.pmOptions = this.buildPmOptions(data);
+    });
     this.catalogService.getCatalogItems('PRJ_SYSTEMSCAT').subscribe((data) => (this.systemItems = data));
     this.catalogService.getCatalogItems('PRJ_MODULECAT').subscribe((data) => (this.moduleItems = data));
     this.catalogService.getCatalogItems('PRJ_ACTIVITYTYTYPECAT').subscribe((data) => (this.activityTypeItems = data));
@@ -71,6 +77,7 @@ export class TimesheetListComponent implements OnInit {
     this.timesheetService.search(this.filters).subscribe({
       next: (data) => {
         this.entries = data;
+        this.applyPmFilter();
         this.loading = false;
       },
       error: () => {
@@ -82,11 +89,38 @@ export class TimesheetListComponent implements OnInit {
 
   clearFilters(): void {
     this.filters = emptyFilters();
+    this.pmFilter = null;
     this.reload();
   }
 
+  applyPmFilter(): void {
+    this.filteredEntries = this.pmFilter
+      ? this.entries.filter((e) => this.pmCodeForProject(e.seqproject) === this.pmFilter)
+      : this.entries;
+  }
+
+  private buildPmOptions(projects: ProjectListItem[]): UserOption[] {
+    const seen = new Map<number, string>();
+    projects.forEach((p) => {
+      if (p.codeuserPm != null && !seen.has(p.codeuserPm)) {
+        seen.set(p.codeuserPm, p.pmName);
+      }
+    });
+    return Array.from(seen, ([code, name]) => ({ code, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  private pmCodeForProject(seqproject: number | null): number | null {
+    const project = this.projects.find((p) => p.seq === seqproject);
+    return project ? project.codeuserPm : null;
+  }
+
+  pmNameFor(entry: TimesheetView): string {
+    const project = this.projects.find((p) => p.seq === entry.seqproject);
+    return project ? project.pmName : '—';
+  }
+
   get totalHours(): number {
-    return this.entries.reduce((sum, e) => sum + Number(e.hoursconsumed || 0), 0);
+    return this.filteredEntries.reduce((sum, e) => sum + Number(e.hoursconsumed || 0), 0);
   }
 
   openNew(): void {
