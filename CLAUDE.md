@@ -434,5 +434,43 @@ posteriores (6+) son módulos nuevos pedidos fuera de ese roadmap original.
     Proyecto`, etc.) y título de sección `Hitos`→`Hitos por Fase y
     Consultor`.
 
+- ✅ **Fase 9** (Excel de Avance sin "Cambios aprobados" + filtro/columna
+  Project Manager en Timesheets) — dos pedidos puntuales:
+  - **Excel de Avance de Proyectos**: la sección "Cambios aprobados" ya
+    estaba deshabilitada en pantalla desde la Fase 8
+    (`changesSectionEnabled = false`), pero el export a `.xlsx`
+    (`ProjectProgressExcelExport.java`) seguía escribiéndola siempre — se
+    eliminó por completo esa sección del Excel (título, tabla y el método
+    `writeChangeTable(...)`, más el import ahora no usado de `ChangeView`),
+    dejando "Novedades presentadas" como última sección. Verificado
+    reiniciando el backend (las clases ya compiladas seguían sirviendo el
+    Excel viejo hasta el restart) e inspeccionando el `.xlsx` descargado vía
+    API (`unzip` + grep sobre `xl/sharedStrings.xml`) para confirmar que la
+    etiqueta ya no aparece.
+  - **Registro de Timesheets** (`frontend/src/app/timesheet/`): se agregó un
+    filtro nuevo "Project Manager" (`pmFilter`, poblado con
+    `pmOptions` — lista deduplicada de `codeuserPm`/`pmName` derivada en
+    vivo de los proyectos ya cargados, nunca del catálogo genérico de
+    usuarios, para evitar valores estáticos o no relacionados con proyectos
+    existentes) y una columna "Project Manager" en la grilla, ubicada
+    inmediatamente después de "Proyecto / Incidencia" (`pmNameFor(entry)`,
+    resuelto por `entry.seqproject` contra la lista de proyectos ya
+    cargada). El filtro se resuelve 100% en el cliente
+    (`filteredEntries`/`applyPmFilter()`) porque el PM no es una columna de
+    `tprj_project_timesheet` sino que se deriva de su proyecto — no requirió
+    cambios de backend ni de `TimesheetFilters`. "Horas filtradas" y el
+    `p-table` ahora leen de `filteredEntries` en vez de `entries`
+    directamente. Insertar esta columna corrió en una posición la columna
+    "Descripción" (de la 8ª a la 9ª) — el selector CSS `nth-child(8)` que la
+    hacía la única columna de texto libre con wrap quedó apuntando a "Tipo
+    actividad" por error; se corrigió a `nth-child(9)` y de paso se pidió
+    "achicar" esa columna: se agregó `min-width:150px`/`max-width:200px` +
+    `word-break:break-word` (antes solo tenía `min-width`, sin tope
+    superior, así que el layout `auto` de la tabla la dejaba crecer tan
+    ancha como el texto más largo en una sola línea en vez de partirlo en
+    varias) — verificado midiendo `getBoundingClientRect()` de la celda:
+    150px de ancho fijo y alto variable según cuántas líneas ocupa cada
+    descripción.
+
 Cada fase se implementa y valida (build + prueba manual en navegador) antes
 de pasar a la siguiente.
